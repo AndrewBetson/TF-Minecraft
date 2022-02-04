@@ -1,0 +1,6 @@
+"VertexLitGeneric"
+{
+	"$basetexture"		"models/minecraft/dirt"
+
+	"$surfaceprop"		"dirt"
+}

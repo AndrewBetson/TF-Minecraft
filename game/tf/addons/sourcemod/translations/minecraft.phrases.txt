@@ -1,0 +1,113 @@
+"Phrases"
+{
+	// General
+
+	"MC_SelectedBlock"
+	{
+		"en"	"{green}[Minecraft]{default} Selected block: %t"
+	}
+
+	"MC_HowMany"
+	{
+		"en"	"{green}[Minecraft]{default} There are currently %d blocks in the world. %d more can be built before the limit is reached."
+	}
+
+	"MC_BuiltBy"
+	{
+		"en"	"{green}[Minecraft]{default} Block built by: %s"
+	}
+
+	"MC_Credits"
+	{
+		"en"	"{green}[Minecraft]{default} Original plugin by {vintage}Moonly Days{default}; overhaul by {unique}Andrew \"andrewb\" Betson{default}"
+	}
+
+	"MC_BlockMenu_Title"
+	{
+		"en"	"Select a Block"
+	}
+
+	// Admin commands.
+
+	"MC_ClearedAll"
+	{
+		"en"	"{green}[Minecraft]{default} All Minecraft blocks have been removed from the map."
+	}
+
+	"MC_ClearedAllOfType"
+	{
+		"en"	"{green}[Minecraft]{default} All %t blocks have been removed from the map."
+	}
+
+	"MC_Plugin_Disabled"
+	{
+		"en"	"{green}[Minecraft]{default} Building and breaking blocks has been disabled until the next mapchange."
+	}
+
+	"MC_Plugin_Enabled"
+	{
+		"en"	"{green}[Minecraft]{default} Building and breaking blocks has been enabled."
+	}
+
+	"MC_Ban_Usage"
+	{
+		"en"	"{green}[Minecraft]{default} Usage: sm_mc_ban <#userid|name> <minutes|0> <reason>"
+	}
+
+	"MC_Unban_Usage"
+	{
+		"en"	"{green}[Minecraft]{default} Usage: sm_mc_unban <#userid|name>"
+	}
+
+	"MC_Banned"
+	{
+		"en"	"{green}[Minecraft]{default} You have been banned from building and breaking blocks."
+	}
+
+	"MC_Unbanned"
+	{
+		"en"	"{green}[Minecraft]{default} You have been unbanned from building and breaking blocks."
+	}
+
+	// Error messages.
+
+	"MC_CannotBuild_Banned"
+	{
+		"en"	"{green}[Minecraft]{default} You are banned from building and breaking blocks."
+	}
+
+	"MC_CannotBuild_Disabled"
+	{
+		"en"	"{green}[Minecraft]{default} Building and breaking blocks is disabled until the next mapchange."
+	}
+
+	"MC_CannotBuild_TooManyBlocks"
+	{
+		"en"	"{green}[Minecraft]{default} Block limit of {unique}%d{default} has been reached. Break some to build."
+	}
+
+	"MC_CannotBuild_TooManyOfThisType"
+	{
+		"en"	"{green}[Minecraft]{default} Limit of {unique}%d{default} for this block type has been reached. Break some to build."
+	}
+
+	"MC_CannotBuild_Teleporter"
+	{
+		"en"	"{green}[Minecraft]{default} Can't build blocks near or above teleporters. Build somewhere else."
+	}
+
+	"MC_MustBeAlive"
+	{
+		"en"	"{green}[Minecraft]{default} You must be alive to build or break blocks."
+	}
+
+	"MC_BlockIDOutOfBounds"
+	{
+		"en"	"{green}[Minecraft]{default} Block ID outside of possible 1-128 range."
+	}
+
+	"MC_UndefinedBlockID"
+	{
+		"en"	"{green}[Minecraft]{default} Undefined block ID."
+	}
+}

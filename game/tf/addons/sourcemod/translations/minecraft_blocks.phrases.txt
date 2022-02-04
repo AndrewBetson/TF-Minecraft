@@ -1,0 +1,347 @@
+"Phrases"
+{
+	// Page 1
+
+	"MC_Block_Grass"
+	{
+		"en"		"Grass"
+	}
+
+	"MC_Block_Dirt"
+	{
+		"en"		"Dirt"
+	}
+
+	"MC_Block_Cobblestone"
+	{
+		"en"		"Cobblestone"
+	}
+
+	"MC_Block_Stone"
+	{
+		"en"		"Stone"
+	}
+
+	"MC_Block_Planks"
+	{
+		"en"		"Planks"
+	}
+
+	"MC_Block_Log"
+	{
+		"en"		"Log"
+	}
+
+	"MC_Block_Leaves"
+	{
+		"en"		"Leaves"
+	}
+
+	// Page 2
+
+	"MC_Block_CoalOre"
+	{
+		"en"		"Coal Ore"
+	}
+
+	"MC_Block_IronOre"
+	{
+		"en"		"Iron Ore"
+	}
+
+	"MC_Block_GoldOre"
+	{
+		"en"		"Gold Ore"
+	}
+
+	"MC_Block_EmeraldOre"
+	{
+		"en"		"Emerald Ore"
+	}
+
+	"MC_Block_RedstoneOre"
+	{
+		"en"		"Redstone Ore"
+	}
+
+	"MC_Block_LapisOre"
+	{
+		"en"		"Lapis Ore"
+	}
+
+	"MC_Block_DiamondOre"
+	{
+		"en"		"Diamond Ore"
+	}
+
+	// Page 3
+
+	"MC_Block_CoalBlock"
+	{
+		"en"		"Coal Block"
+	}
+
+	"MC_Block_IronBlock"
+	{
+		"en"		"Iron Block"
+	}
+
+	"MC_Block_GoldenBlock"
+	{
+		"en"		"Golden Block"
+	}
+
+	"MC_Block_EmeraldBlock"
+	{
+		"en"		"Emerald Block"
+	}
+
+	"MC_Block_RedstoneBlock"
+	{
+		"en"		"Redstone Block"
+	}
+
+	"MC_Block_LapisBlock"
+	{
+		"en"		"Lapis Block"
+	}
+
+	"MC_Block_DiamondBlock"
+	{
+		"en"		"Diamond Block"
+	}
+
+	// Page 3
+
+	"MC_Block_BlackConcrete"
+	{
+		"en"		"Black Concrete"
+	}
+
+	"MC_Block_BlueConcrete"
+	{
+		"en"		"Blue Concrete"
+	}
+
+	"MC_Block_BrownConcrete"
+	{
+		"en"		"Brown Concrete"
+	}
+
+	"MC_Block_CyanConcrete"
+	{
+		"en"		"Cyan Concrete"
+	}
+
+	"MC_Block_GrayConcrete"
+	{
+		"en"		"Gray Concrete"
+	}
+
+	"MC_Block_GreenConcrete"
+	{
+		"en"		"Green Concrete"
+	}
+
+	"MC_Block_LightBlueConcrete"
+	{
+		"en"		"Light Blue Concrete"
+	}
+
+	// Page 4
+
+	"MC_Block_LimeConcrete"
+	{
+		"en"		"Lime Concrete"
+	}
+
+	"MC_Block_OrangeConcrete"
+	{
+		"en"		"Orange Concrete"
+	}
+
+	"MC_Block_PinkConcrete"
+	{
+		"en"		"Pink Concrete"
+	}
+
+	"MC_Block_PurpleConcrete"
+	{
+		"en"		"Purple Concrete"
+	}
+
+	"MC_Block_RedConcrete"
+	{
+		"en"		"Red Concrete"
+	}
+
+	"MC_Block_YellowConcrete"
+	{
+		"en"		"Yellow Concrete"
+	}
+
+	"MC_Block_WhiteConcrete"
+	{
+		"en"		"White Concrete"
+	}
+
+	// Page 5
+
+	"MC_Block_Sand"
+	{
+		"en"		"Sand"
+	}
+
+	"MC_Block_Gravel"
+	{
+		"en"		"Gravel"
+	}
+
+	"MC_Block_Bookshelf"
+	{
+		"en"		"Bookshelf"
+	}
+
+	"MC_Block_CraftingTable"
+	{
+		"en"		"Crafting Table"
+	}
+
+	"MC_Block_Chest"
+	{
+		"en"		"Chest"
+	}
+
+	"MC_Block_Furnace"
+	{
+		"en"		"Furnace"
+	}
+
+	"MC_Block_Bricks"
+	{
+		"en"		"Bricks"
+	}
+
+	// Page 6
+
+	"MC_Block_TNT"
+	{
+		"en"		"TNT"
+	}
+
+	"MC_Block_Glass"
+	{
+		"en"		"Glass"
+	}
+
+	"MC_Block_Sponge"
+	{
+		"en"		"Sponge"
+	}
+
+	"MC_Block_Ice"
+	{
+		"en"		"Ice"
+	}
+
+	"MC_Block_StoneBricks"
+	{
+		"en"		"Stone Bricks"
+	}
+
+	"MC_Block_SeaLantern"
+	{
+		"en"		"Sea Lantern"
+	}
+
+	"MC_Block_Sandstone"
+	{
+		"en"		"Sandstone"
+	}
+
+	// Page 7
+
+	"MC_Block_QuartzBlock"
+	{
+		"en"		"Quartz Block"
+	}
+
+	"MC_Block_QuartzPillar"
+	{
+		"en"		"Quartz Pillar"
+	}
+
+	"MC_Block_ChiseledQuartz"
+	{
+		"en"		"Chiseled Quartz"
+	}
+
+	"MC_Block_Netherrack"
+	{
+		"en"		"Netherrack"
+	}
+
+	"MC_Block_NetherBricks"
+	{
+		"en"		"Nether Bricks"
+	}
+
+	"MC_Block_Glowstone"
+	{
+		"en"		"Glowstone"
+	}
+
+	"MC_Block_SoulSand"
+	{
+		"en"		"Soul Sand"
+	}
+
+	// Page 8
+
+	"MC_Block_Pumpkin"
+	{
+		"en"		"Pumpkin"
+	}
+
+	"MC_Block_Melon"
+	{
+		"en"		"Melon"
+	}
+
+	"MC_Block_Bedrock"
+	{
+		"en"		"Bedrock"
+	}
+
+	"MC_Block_Obsidian"
+	{
+		"en"		"Obsidian"
+	}
+
+	"MC_Block_MushroomStem"
+	{
+		"en"		"Mushroom Stem"
+	}
+
+	"MC_Block_RedMushroom"
+	{
+		"en"		"Red Mushroom"
+	}
+
+	"MC_Block_BrownMushroom"
+	{
+		"en"		"Brown Mushroom"
+	}
+
+	// Secret
+
+	"MC_Block_SteveHead"
+	{
+		"en"		"Steve Head"
+	}
+
+	"MC_Block_BrownBricks"
+	{
+		"en"		"Brown Bricks"
+	}
+}

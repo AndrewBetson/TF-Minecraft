@@ -1,0 +1,28 @@
+# Ignore everything by default.
+*.*
+
+# Src content.
+!*.dmx
+!*.qc
+!*.blend
+!*.tga
+
+# Non-compilable content.
+!*.mp3
+!*.vmt
+
+# Scripts and stuff.
+!*.sp
+!*.inc
+!*.phrases.txt
+!*.games.txt
+!*.cfg
+!package_fastdl.sh
+
+# Git stuff.
+!LICENSE.md
+!README.md
+!.gitignore
+
+# Don't commit data from staged builds.
+/__STAGING__/

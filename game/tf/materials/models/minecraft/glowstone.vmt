@@ -1,0 +1,7 @@
+"VertexLitGeneric"
+{
+	"$basetexture"		"models/minecraft/glowstone"
+	"$selfillum"		"1"
+
+	"$surfaceprop"		"glass"
+}
