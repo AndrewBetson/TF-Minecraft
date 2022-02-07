@@ -23,9 +23,6 @@
 
 #define MAXBLOCKINDICES 129
 
-char g_szBaseMaterialVMT[]	= "materials/models/minecraft/%s.vmt";
-char g_szBaseMaterialVTF[]	= "materials/models/minecraft/%s.vtf";
-
 /** @brief A block as defined in minecraft_blocks.cfg */
 enum struct BlockDef_t
 {
@@ -153,21 +150,21 @@ public Action Cmd_MC_Build( int nClientIdx, int nNumArgs )
 	if ( g_bPluginDisabled )
 	{
 		CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_Disabled" );
-		ClientCommand( nClientIdx, "playgamesound common/wpn_denyselect.wav" );
+		EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
 		return Plugin_Handled;
 	}
 
 	if ( !IsPlayerAlive( nClientIdx ) )
 	{
 		CPrintToChat( nClientIdx, "%t", "MC_MustBeAlive" );
-		ClientCommand( nClientIdx, "playgamesound common/wpn_denyselect.wav" );
+		EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
 		return Plugin_Handled;
 	}
 
 	if ( g_bIsBanned[ nClientIdx ] )
 	{
 		CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_Banned" );
-		ClientCommand( nClientIdx, "playgamesound common/wpn_denyselect.wav" );
+		EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
 		return Plugin_Handled;
 	}
 
@@ -215,7 +212,7 @@ public Action Cmd_MC_Build( int nClientIdx, int nNumArgs )
 
 	if ( GetVectorDistance( vClientEyeOrigin, vHitPoint ) > 300.0 )
 	{
-		ClientCommand( nClientIdx, "playgamesound common/wpn_denyselect.wav" );
+		EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
 		return Plugin_Handled;
 	}
 
@@ -228,21 +225,21 @@ public Action Cmd_MC_Build( int nClientIdx, int nNumArgs )
 		// Check new end point to handle edge cases.
 		if ( Block_IsBlockAtOrigin( vHitPoint ) )
 		{
-			ClientCommand( nClientIdx, "playgamesound common/wpn_denyselect.wav" );
+			EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
 			return Plugin_Handled;
 		}
 	}
 
 	if ( Block_IsPlayerNear( vHitPoint ) )
 	{
-		ClientCommand( nClientIdx, "playgamesound common/wpn_denyselect.wav" );
+		EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
 		return Plugin_Handled;
 	}
 
 	if ( Block_IsTeleporterNear( vHitPoint ) )
 	{
 		CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_Teleporter" );
-		ClientCommand( nClientIdx, "playgamesound common/wpn_denyselect.wav" );
+		EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
 		return Plugin_Handled;
 	}
 
@@ -320,7 +317,7 @@ public Action Cmd_MC_Break( int nClientIdx, int nNumArgs )
 	if ( g_bIsBanned[ nClientIdx ] )
 	{
 		CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_Banned" );
-		ClientCommand( nClientIdx, "playgamesound common/wpn_denyselect.wav" );
+		EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
 		return Plugin_Handled;
 	}
 
@@ -755,11 +752,15 @@ void PrecacheContent()
 			continue;
 		}
 
+		PrecacheModel( g_BlockDefs[ nIdx ].szModel );
+		PrecacheSound( g_BlockDefs[ nIdx ].szBuildSound );
+		PrecacheSound( g_BlockDefs[ nIdx ].szBreakSound );
+		PrecacheSound( "common/wpn_denyselect.wav" );
+
 		char szModelBase[ 2 ][ 32 ];
 		ExplodeString( g_BlockDefs[ nIdx ].szModel, ".", szModelBase, 2, 32 );
 
 		AddFileToDownloadsTable( g_BlockDefs[ nIdx ].szModel );
-		PrecacheModel( g_BlockDefs[ nIdx ].szModel );
 
 		char szModel[ 64 ];
 
@@ -780,10 +781,10 @@ void PrecacheContent()
 
 		char szMaterial[ 64 ];
 
-		Format( szMaterial, 64, g_szBaseMaterialVMT, g_BlockDefs[ nIdx ].szMaterial );
+		Format( szMaterial, 64, "materials/models/minecraft/%s.vmt", g_BlockDefs[ nIdx ].szMaterial );
 		AddFileToDownloadsTable( szMaterial );
 
-		Format( szMaterial, 64, g_szBaseMaterialVTF, g_BlockDefs[ nIdx ].szMaterial );
+		Format( szMaterial, 64, "materials/models/minecraft/%s.vtf", g_BlockDefs[ nIdx ].szMaterial );
 		AddFileToDownloadsTable( szMaterial );
 
 		char szSound[ PLATFORM_MAX_PATH ];
@@ -793,8 +794,5 @@ void PrecacheContent()
 
 		Format( szSound, PLATFORM_MAX_PATH, "sound/%s", g_BlockDefs[ nIdx ].szBreakSound );
 		AddFileToDownloadsTable( szSound );
-
-		PrecacheSound( g_BlockDefs[ nIdx ].szBuildSound );
-		PrecacheSound( g_BlockDefs[ nIdx ].szBreakSound );
 	}
 }
