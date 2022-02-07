@@ -72,8 +72,22 @@ enum struct BlockDef_t
 	bool	bHidden;
 }
 
+/** @brief A block as it exists in the world. */
+enum struct WorldBlock_t
+{
+	int		nEntityRef;
+	int		nBlockIdx;
+	bool	bProtected;
+	float	vOrigin[ 3 ];
+
+	bool IsAtOrigin( float vInOrigin[ 3 ] )
+	{
+		return GetVectorDistance( this.vOrigin, vInOrigin ) <= 0.1;
+	}
+}
+
 BlockDef_t	g_BlockDefs[ MAXBLOCKINDICES ];
-int			g_nNumBlocksInWorld;
+ArrayList	g_WorldBlocks;
 int			g_nSelectedBlock[ MAXPLAYERS + 1 ] = { 1, ... };
 
 ConVar		sv_mc_block_limit;
@@ -103,24 +117,17 @@ void OnPluginStart_Blocks()
 
 	RegAdminCmd( "sm_mc_clear", Cmd_MC_Clear, ADMFLAG_BAN, "Remove all Minecraft blocks, optionally of a specific type, from the world." );
 	RegAdminCmd( "sm_mc_disable", Cmd_MC_Disable, ADMFLAG_BAN, "Disable the building and breaking of Minecraft blocks until the next mapchange." );
+	RegAdminCmd( "sm_mc_protect", Cmd_MC_Protect, ADMFLAG_BAN, "Protect a block from being broken by any non-staff players if it's not already protected, remove protections otherwise." );
 
 	LoadConfig();
+
+	g_WorldBlocks = new ArrayList( sizeof( WorldBlock_t ) );
 }
 
 void OnMapStart_Blocks()
 {
 	g_bPluginDisabled = false;
-	g_nNumBlocksInWorld = 0;
-
-	int nBlock;
-	while ( ( nBlock = FindEntityByClassname( nBlock, "prop_dynamic" ) ) != INVALID_ENT_REFERENCE )
-	{
-		if ( IsValidBlock( nBlock ) )
-		{
-			AcceptEntityInput( nBlock, "Kill", -1, -1 );
-		}
-	}
-	g_nNumBlocksInWorld = 0;
+	g_WorldBlocks.Clear();
 
 	PrecacheContent();
 }
@@ -141,7 +148,6 @@ public Action Cmd_MC_Build( int nClientIdx, int nNumArgs )
 		return Plugin_Handled;
 	}
 
-	// Check if player is alive and in-game
 	if ( !IsClientInGame( nClientIdx ) )
 	{
 		return Plugin_Handled;
@@ -172,7 +178,7 @@ public Action Cmd_MC_Build( int nClientIdx, int nNumArgs )
 	if ( g_nSelectedBlock[ nClientIdx ] < 1 )	g_nSelectedBlock[ nClientIdx ] = 1;
 	if ( g_nSelectedBlock[ nClientIdx ] > 128 )	g_nSelectedBlock[ nClientIdx ] = 128;
 
-	if ( g_nNumBlocksInWorld >= sv_mc_block_limit.IntValue )
+	if ( g_WorldBlocks.Length >= sv_mc_block_limit.IntValue )
 	{
 		CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_TooManyBlocks", sv_mc_block_limit.IntValue );
 		return Plugin_Handled;
@@ -182,7 +188,7 @@ public Action Cmd_MC_Build( int nClientIdx, int nNumArgs )
 
 	if( g_BlockDefs[ nSelected ].nLimit != -1 )
 	{
-		if ( Block_GetLimitForType( nSelected ) >= g_BlockDefs[ nSelected ].nLimit )
+		if ( Block_GetNumberOfTypeInWorld( nSelected ) >= g_BlockDefs[ nSelected ].nLimit )
 		{
 			CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_TooManyOfType", g_BlockDefs[ nSelected ].nLimit );
 			return Plugin_Handled;
@@ -256,20 +262,23 @@ public Action Cmd_MC_Build( int nClientIdx, int nNumArgs )
 		SetEntProp( nEnt, Prop_Send, "m_nSkin", g_BlockDefs[ nSelected ].nSkin );
 		SetEntProp( nEnt, Prop_Send, "m_nSolidType", 6 );
 
-		char szClientAuthString[ MAX_NAME_LENGTH ];
+		char szClientAuthString[ 32 ];
 		GetClientAuthId( nClientIdx, AuthId_Steam2, szClientAuthString, sizeof( szClientAuthString ) );
 
-		DispatchKeyValue( nEnt, "built_by", szClientAuthString );
-
-		char szBlockIdx[ 4 ];
-		IntToString( nSelected, szBlockIdx, sizeof( szBlockIdx ) );
-
-		DispatchKeyValue( nEnt, "block_id", szBlockIdx );
+		DispatchKeyValue( nEnt, "targetname", szClientAuthString );
 
 		SetEntityModel( nEnt, g_BlockDefs[ nSelected ].szModel );
 
 		DispatchSpawn( nEnt );
 		ActivateEntity( nEnt );
+
+		WorldBlock_t NewWorldBlock;
+		NewWorldBlock.nEntityRef = EntIndexToEntRef( nEnt );
+		NewWorldBlock.nBlockIdx = nSelected;
+		NewWorldBlock.bProtected = false;
+		NewWorldBlock.vOrigin = vHitPoint;
+
+		g_WorldBlocks.PushArray( NewWorldBlock );
 
 		if( g_BlockDefs[ nSelected ].bEmitsLight )
 		{
@@ -298,7 +307,6 @@ public Action Cmd_MC_Build( int nClientIdx, int nNumArgs )
 		}
 
 		EmitAmbientSound( g_BlockDefs[ nSelected ].szBuildSound, vHitPoint, nEnt, SNDLEVEL_NORMAL );
-		g_nNumBlocksInWorld++;
 
 		SDKHook( nEnt, SDKHook_OnTakeDamage, Block_OnTakeDamage );
 	}
@@ -342,15 +350,15 @@ public Action Cmd_MC_Block( int nClientIdx, int nNumArgs )
 	}
 	else
 	{
-		for ( int nIdx = 0; nIdx < MAXBLOCKINDICES; nIdx++ )
+		for ( int i = 0; i < MAXBLOCKINDICES; i++ )
 		{
-			if ( g_BlockDefs[ nIdx ].nIndex <= 0 || g_BlockDefs[ nIdx ].bHidden )
+			if ( g_BlockDefs[ i ].nIndex <= 0 || g_BlockDefs[ i ].bHidden )
 			{
 				continue;
 			}
 			char szIndex[ 4 ];
-			IntToString( nIdx, szIndex, sizeof( szIndex ) );
-			menu.AddItem( szIndex, g_BlockDefs[ nIdx ].szPhrase );
+			IntToString( i, szIndex, sizeof( szIndex ) );
+			menu.AddItem( szIndex, g_BlockDefs[ i ].szPhrase );
 		}
 	}
 
@@ -362,7 +370,7 @@ public Action Cmd_MC_Block( int nClientIdx, int nNumArgs )
 
 public Action Cmd_MC_HowMany( int nClientIdx, int nNumArgs )
 {
-	CPrintToChat( nClientIdx, "%t", "MC_HowMany", g_nNumBlocksInWorld, sv_mc_block_limit.IntValue - g_nNumBlocksInWorld );
+	CPrintToChat( nClientIdx, "%t", "MC_HowMany", g_WorldBlocks.Length, sv_mc_block_limit.IntValue - g_WorldBlocks.Length );
 	return Plugin_Handled;
 }
 
@@ -371,10 +379,10 @@ public Action Cmd_MC_BuiltBy( int nClientIdx, int nNumArgs )
 	int nTarget = GetClientAimTarget( nClientIdx, false );
 	if ( IsValidBlock( nTarget ) )
 	{
-		char szBuiltByKey[ 32 ];
-		GetCustomKeyValue( nTarget, "built_by", szBuiltByKey, sizeof( szBuiltByKey ) );
+		char szBuilderClientAuthID[ 32 ];
+		GetEntPropString( nTarget, Prop_Data, "m_iName", szBuilderClientAuthID, sizeof( szBuilderClientAuthID ) );
 
-		CPrintToChat( nClientIdx, "%t", "MC_BuiltBy", szBuiltByKey );
+		CPrintToChat( nClientIdx, "%t", "MC_BuiltBy", szBuilderClientAuthID );
 	}
 
 	return Plugin_Handled;
@@ -396,16 +404,13 @@ public Action Cmd_MC_Clear( int nClientIdx, int nNumArgs )
 	}
 	else
 	{
-		int nBlock;
-		while ( ( nBlock = FindEntityByClassname( nBlock, "prop_dynamic" ) ) != INVALID_ENT_REFERENCE )
+		for ( int i = g_WorldBlocks.Length - 1; i >= 0; --i )
 		{
-			if ( IsValidBlock( nBlock ) )
-			{
-				AcceptEntityInput( nBlock, "Kill", -1, -1 );
-			}
+			AcceptEntityInput( EntRefToEntIndex( g_WorldBlocks.Get( i, WorldBlock_t::nEntityRef ) ), "Kill" );
+			g_WorldBlocks.Erase( i );
 		}
 		CPrintToChatAll( "%t", "MC_ClearedAll" );
-		g_nNumBlocksInWorld = 0;
+		g_WorldBlocks.Clear();
 	}
 
 	return Plugin_Handled;
@@ -419,11 +424,44 @@ public Action Cmd_MC_Disable( int nClientIdx, int nNumArgs )
 	return Plugin_Handled;
 }
 
+public Action Cmd_MC_Protect( int nClientIdx, int nNumArgs )
+{
+	int nTarget = GetClientAimTarget( nClientIdx, false );
+	if ( IsValidBlock( nTarget ) )
+	{
+		int nBlockArrayIndex = g_WorldBlocks.FindValue( EntIndexToEntRef( nTarget ), WorldBlock_t::nEntityRef );
+		if ( nBlockArrayIndex == -1 )
+		{
+			return Plugin_Handled;
+		}
+
+		bool bIsBlockProtected = g_WorldBlocks.Get( nBlockArrayIndex, WorldBlock_t::bProtected );
+		g_WorldBlocks.Set( nBlockArrayIndex, !bIsBlockProtected, WorldBlock_t::bProtected );
+		CPrintToChat( nClientIdx, "%t", bIsBlockProtected ? "MC_Unprotected" : "MC_Protected", g_BlockDefs[ g_WorldBlocks.Get( nBlockArrayIndex, WorldBlock_t::nBlockIdx ) ].szPhrase );
+	}
+
+	return Plugin_Handled;
+}
+
 public void Block_TryBreak( int nClientIdx )
 {
 	int nTarget = GetClientAimTarget( nClientIdx, false );
 	if ( IsValidBlock( nTarget ) )
 	{
+		int nBlockArrayIdx = g_WorldBlocks.FindValue( EntIndexToEntRef( nTarget ), WorldBlock_t::nEntityRef );
+		if ( nBlockArrayIdx == -1 )
+		{
+			return;
+		}
+
+		bool bIsBlockProtected = g_WorldBlocks.Get( nBlockArrayIdx, WorldBlock_t::bProtected );
+		if ( bIsBlockProtected && !GetAdminFlag( GetUserAdmin( nClientIdx ), Admin_Ban ) )
+		{
+			CPrintToChat( nClientIdx, "%t", "MC_BlockProtected" );
+			EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
+			return;
+		}
+
 		float vClientPos[ 3 ];
 		GetEntPropVector( nClientIdx, Prop_Send, "m_vecOrigin", vClientPos );
 
@@ -432,19 +470,17 @@ public void Block_TryBreak( int nClientIdx )
 
 		if ( GetVectorDistance( vClientPos, vTargetPos ) > 300 )
 		{
+			EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
 			return;
 		}
 
-		char szBlockIdx[ 4 ];
-		GetCustomKeyValue( nTarget, "block_id", szBlockIdx, sizeof( szBlockIdx ) );
-		int nBlockIdx = StringToInt( szBlockIdx );
-
+		int nBlockIdx = g_WorldBlocks.Get( nBlockArrayIdx, WorldBlock_t::nBlockIdx );
 		EmitAmbientSound( g_BlockDefs[ nBlockIdx ].szBreakSound, vTargetPos, nTarget, SNDLEVEL_NORMAL );
+
 		AcceptEntityInput( nTarget, "Kill" );
-
-		g_nNumBlocksInWorld--;
-
 		SDKUnhook( nTarget, SDKHook_OnTakeDamage, Block_OnTakeDamage );
+
+		g_WorldBlocks.Erase( nBlockArrayIdx );
 	}
 }
 
@@ -462,13 +498,13 @@ public void Block_ClearType( int nClientIdx, int nBlockIdx )
 		return;
 	}
 
-	int nBlockEnt;
-	while ( ( nBlockEnt = FindEntityByClassname( nBlockEnt, "prop_dynamic" ) ) != INVALID_ENT_REFERENCE )
+	for ( int i = 0; i < g_WorldBlocks.Length; i++ )
 	{
-		if ( IsBlockOfType( nBlockEnt, nBlockIdx ) )
+		if ( g_WorldBlocks.Get( i, WorldBlock_t::nBlockIdx ) == nBlockIdx )
 		{
-			AcceptEntityInput( nBlockEnt, "Kill" );
-			g_nNumBlocksInWorld--;
+			AcceptEntityInput( EntRefToEntIndex( g_WorldBlocks.Get( i, WorldBlock_t::nEntityRef ) ), "Kill" );
+			g_WorldBlocks.Erase( i );
+			i--;
 		}
 	}
 
@@ -526,17 +562,13 @@ public int Menu_BlockSelect( Menu hMenu, MenuAction eAction, int nParam1, int nP
 
 public bool Block_IsBlockAtOrigin( float vOrigin[ 3 ] )
 {
-	int nBlock;
-	while( ( nBlock = FindEntityByClassname( nBlock, "prop_dynamic" ) ) != INVALID_ENT_REFERENCE )
+	for ( int i = 0; i < g_WorldBlocks.Length; i++ )
 	{
-		if ( IsValidBlock( nBlock ) )
+		WorldBlock_t CurWorldBlock;
+		g_WorldBlocks.GetArray( i, CurWorldBlock );
+		if ( CurWorldBlock.IsAtOrigin( vOrigin ) )
 		{
-			float vBlockOrigin[ 3 ];
-			GetEntPropVector( nBlock, Prop_Send, "m_vecOrigin", vBlockOrigin );
-			if ( GetVectorDistance( vOrigin, vBlockOrigin ) <= 0.1 )
-			{
-				return true;
-			}
+			return true;
 		}
 	}
 
@@ -547,12 +579,12 @@ public bool Block_IsPlayerNear( float vOrigin[ 3 ] )
 {
 	// TODO(AndrewB): Check for players with TR_EnumerateEntitiesSphere() when SM 1.11 goes stable.
 
-	for ( int nIdx = 1; nIdx < MaxClients; nIdx++ )
+	for ( int i = 1; i < MaxClients; i++ )
 	{
-		if ( IsClientInGame( nIdx ) && IsPlayerAlive( nIdx ) )
+		if ( IsClientInGame( i ) && IsPlayerAlive( i ) )
 		{
 			float vPlayerOrigin[ 3 ];
-			GetEntPropVector( nIdx, Prop_Send, "m_vecOrigin", vPlayerOrigin, 0 );
+			GetEntPropVector( i, Prop_Send, "m_vecOrigin", vPlayerOrigin, 0 );
 			if ( GetVectorDistance( vOrigin, vPlayerOrigin ) < 60.0 )
 			{
 				return true;
@@ -632,30 +664,27 @@ public bool TraceEntityFilter_Teleporter( int nEntityIdx, int nContentsMask )
 	return StrEqual( szClassname, "obj_teleporter", false );
 }
 
-public int Block_GetLimitForType( int nBlockIdx )
+public int Block_GetNumberOfTypeInWorld( int nBlockIdx )
 {
-	int nLimit;
-	int nBlockEnt;
-	
-	while( ( nBlockEnt = FindEntityByClassname( nBlockEnt, "prop_dynamic" ) ) != INVALID_ENT_REFERENCE )
+	int nNumInWorld;
+
+	for ( int i = 0; i < g_WorldBlocks.Length; i++ )
 	{
-		if ( IsBlockOfType( nBlockEnt, nBlockIdx ) )
+		if ( g_WorldBlocks.Get( i, WorldBlock_t::nBlockIdx ) == nBlockIdx )
 		{
-			nLimit++;
+			nNumInWorld++;
 		}
 	}
 
-	return nLimit;
+	return nNumInWorld;
 }
 
 public bool IsBlockOfType( int nEntity, int nBlockIdx )
 {
 	if ( nEntity > 0 )
 	{
-		char szBlockIdx[ 4 ];
-		GetCustomKeyValue( nEntity, "block_id", szBlockIdx, sizeof( szBlockIdx ) );
-
-		return StringToInt( szBlockIdx ) == g_BlockDefs[ nBlockIdx ].nIndex;
+		int nBlockArrayIdx = g_WorldBlocks.FindValue( EntIndexToEntRef( nEntity ), WorldBlock_t::nEntityRef );
+		return g_WorldBlocks.Get( nBlockArrayIdx, WorldBlock_t::nBlockIdx ) == g_BlockDefs[ nBlockIdx ].nIndex;
 	}
 
 	return false;
@@ -665,7 +694,7 @@ public bool IsValidBlock( int nEntity )
 {
 	if ( nEntity > 0 )
 	{
-		return GetCustomKeyValue( nEntity, "block_id", "", 0 );
+		return g_WorldBlocks.FindValue( EntIndexToEntRef( nEntity ), WorldBlock_t::nEntityRef ) != -1;
 	}
 
 	return false;
@@ -681,17 +710,30 @@ public Action Block_OnTakeDamage(
 	{
 		if ( nDamageType & DMG_CLUB )
 		{
+			int nBlockArrayIdx = g_WorldBlocks.FindValue( EntIndexToEntRef( nVictim ), WorldBlock_t::nEntityRef );
+			if ( nBlockArrayIdx == -1 )
+			{
+				return Plugin_Continue;
+			}
+
+			bool bIsBlockProtected = g_WorldBlocks.Get( nBlockArrayIdx, WorldBlock_t::bProtected );
+			if ( bIsBlockProtected && !GetAdminFlag( GetUserAdmin( nAttacker ), Admin_Ban ) )
+			{
+				CPrintToChat( nAttacker, "%t", "MC_BlockProtected" );
+				EmitSoundToClient( nAttacker, "common/wpn_denyselect.wav" );
+				return Plugin_Continue;
+			}
+
 			float vBlockOrigin[ 3 ];
 			GetEntPropVector( nVictim, Prop_Send, "m_vecOrigin", vBlockOrigin );
 
-			char szBlockIdx[ 4 ];
-			GetCustomKeyValue( nVictim, "block_id", szBlockIdx, sizeof( szBlockIdx ) );
-			int nBlockIdx = StringToInt( szBlockIdx );
-
+			int nBlockIdx = g_WorldBlocks.Get( nBlockArrayIdx, WorldBlock_t::nBlockIdx );
 			EmitAmbientSound( g_BlockDefs[ nBlockIdx ].szBreakSound, vBlockOrigin, nVictim, SNDLEVEL_NORMAL );
 
 			AcceptEntityInput( nVictim, "Kill" );
-			g_nNumBlocksInWorld--;
+			SDKUnhook( nVictim, SDKHook_OnTakeDamage, Block_OnTakeDamage );
+
+			g_WorldBlocks.Erase( nBlockArrayIdx );
 		}
 	}
 
@@ -705,35 +747,35 @@ void LoadConfig()
 	Handle hKeyValues = CreateKeyValues( "Blocks" );
 	FileToKeyValues( hKeyValues, szCfgLocation );
 
-	for( int nIdx = 1; nIdx < MAXBLOCKINDICES; nIdx++ )
+	for( int i = 1; i < MAXBLOCKINDICES; i++ )
 	{
 		char szIndex[ 4 ];
-		IntToString( nIdx, szIndex, sizeof( szIndex ) );
+		IntToString( i, szIndex, sizeof( szIndex ) );
 		if( KvJumpToKey( hKeyValues, szIndex, false ) )
 		{
-			g_BlockDefs[ nIdx ].nIndex = nIdx;
-			KvGetString( hKeyValues, "phrase", g_BlockDefs[ nIdx ].szPhrase, 32 );
-			KvGetString( hKeyValues, "model", g_BlockDefs[ nIdx ].szModel, 32 );
-			KvGetString( hKeyValues, "material", g_BlockDefs[ nIdx ].szMaterial, 32 );
+			g_BlockDefs[ i ].nIndex = i;
+			KvGetString( hKeyValues, "phrase", g_BlockDefs[ i ].szPhrase, 32 );
+			KvGetString( hKeyValues, "model", g_BlockDefs[ i ].szModel, 32 );
+			KvGetString( hKeyValues, "material", g_BlockDefs[ i ].szMaterial, 32 );
 
 			if ( KvJumpToKey( hKeyValues, "sounds" ) )
 			{
-				KvGetString( hKeyValues, "build", g_BlockDefs[ nIdx ].szBuildSound, 64, "minecraft/stone_build.mp3" );
-				KvGetString( hKeyValues, "break", g_BlockDefs[ nIdx ].szBreakSound, 64, "minecraft/stone_break.mp3" );
+				KvGetString( hKeyValues, "build", g_BlockDefs[ i ].szBuildSound, 64, "minecraft/stone_build.mp3" );
+				KvGetString( hKeyValues, "break", g_BlockDefs[ i ].szBreakSound, 64, "minecraft/stone_break.mp3" );
 
 				KvGoBack( hKeyValues );
 			}
 			else
 			{
-				g_BlockDefs[ nIdx ].szBuildSound = "minecraft/stone_build.mp3";
-				g_BlockDefs[ nIdx ].szBreakSound = "minecraft/stone_break.mp3";
+				g_BlockDefs[ i ].szBuildSound = "minecraft/stone_build.mp3";
+				g_BlockDefs[ i ].szBreakSound = "minecraft/stone_break.mp3";
 			}
 
-			g_BlockDefs[ nIdx ].nSkin = KvGetNum( hKeyValues, "skin", 0 );
-			g_BlockDefs[ nIdx ].nLimit = KvGetNum( hKeyValues, "limit", -1 );
-			g_BlockDefs[ nIdx ].bEmitsLight = KvGetNum( hKeyValues, "light", 0 ) == 0 ? false : true;
-			g_BlockDefs[ nIdx ].bOrientToPlayer = KvGetNum( hKeyValues, "orienttoplayer", 0 ) == 0 ? false : true;
-			g_BlockDefs[ nIdx ].bHidden = KvGetNum( hKeyValues, "hidden", 0 ) == 0 ? false : true;
+			g_BlockDefs[ i ].nSkin = KvGetNum( hKeyValues, "skin", 0 );
+			g_BlockDefs[ i ].nLimit = KvGetNum( hKeyValues, "limit", -1 );
+			g_BlockDefs[ i ].bEmitsLight = KvGetNum( hKeyValues, "light", 0 ) == 0 ? false : true;
+			g_BlockDefs[ i ].bOrientToPlayer = KvGetNum( hKeyValues, "orienttoplayer", 0 ) == 0 ? false : true;
+			g_BlockDefs[ i ].bHidden = KvGetNum( hKeyValues, "hidden", 0 ) == 0 ? false : true;
 
 			KvGoBack( hKeyValues );
 		}
@@ -744,23 +786,23 @@ void LoadConfig()
 
 void PrecacheContent()
 {
-	for ( int nIdx = 1; nIdx < MAXBLOCKINDICES; nIdx++ )
+	for ( int i = 1; i < MAXBLOCKINDICES; i++ )
 	{
 		// Skip unused block indices.
-		if ( StrEqual( g_BlockDefs[ nIdx ].szModel, "" ) )
+		if ( StrEqual( g_BlockDefs[ i ].szModel, "" ) )
 		{
 			continue;
 		}
 
-		PrecacheModel( g_BlockDefs[ nIdx ].szModel );
-		PrecacheSound( g_BlockDefs[ nIdx ].szBuildSound );
-		PrecacheSound( g_BlockDefs[ nIdx ].szBreakSound );
+		PrecacheModel( g_BlockDefs[ i ].szModel );
+		PrecacheSound( g_BlockDefs[ i ].szBuildSound );
+		PrecacheSound( g_BlockDefs[ i ].szBreakSound );
 		PrecacheSound( "common/wpn_denyselect.wav" );
 
 		char szModelBase[ 2 ][ 32 ];
-		ExplodeString( g_BlockDefs[ nIdx ].szModel, ".", szModelBase, 2, 32 );
+		ExplodeString( g_BlockDefs[ i ].szModel, ".", szModelBase, 2, 32 );
 
-		AddFileToDownloadsTable( g_BlockDefs[ nIdx ].szModel );
+		AddFileToDownloadsTable( g_BlockDefs[ i ].szModel );
 
 		char szModel[ 64 ];
 
@@ -781,18 +823,18 @@ void PrecacheContent()
 
 		char szMaterial[ 64 ];
 
-		Format( szMaterial, 64, "materials/models/minecraft/%s.vmt", g_BlockDefs[ nIdx ].szMaterial );
+		Format( szMaterial, 64, "materials/models/minecraft/%s.vmt", g_BlockDefs[ i ].szMaterial );
 		AddFileToDownloadsTable( szMaterial );
 
-		Format( szMaterial, 64, "materials/models/minecraft/%s.vtf", g_BlockDefs[ nIdx ].szMaterial );
+		Format( szMaterial, 64, "materials/models/minecraft/%s.vtf", g_BlockDefs[ i ].szMaterial );
 		AddFileToDownloadsTable( szMaterial );
 
 		char szSound[ PLATFORM_MAX_PATH ];
 
-		Format( szSound, PLATFORM_MAX_PATH, "sound/%s", g_BlockDefs[ nIdx ].szBuildSound );
+		Format( szSound, PLATFORM_MAX_PATH, "sound/%s", g_BlockDefs[ i ].szBuildSound );
 		AddFileToDownloadsTable( szSound );
 
-		Format( szSound, PLATFORM_MAX_PATH, "sound/%s", g_BlockDefs[ nIdx ].szBreakSound );
+		Format( szSound, PLATFORM_MAX_PATH, "sound/%s", g_BlockDefs[ i ].szBreakSound );
 		AddFileToDownloadsTable( szSound );
 	}
 }

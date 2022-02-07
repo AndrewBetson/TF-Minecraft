@@ -39,14 +39,10 @@ public Plugin myinfo =
 {
 	name		= "[TF2] Minecraft",
 	description	= "Minecraft, but in TF2.",
-	author		= "Moonly Days; overhauled by Andrew \"andrewb\" Betson; CustomKeyValues by SlidyBat",
+	author		= "Moonly Days; overhauled by Andrew \"andrewb\" Betson",
 	version		= "2.0.1",
 	url			= "https://www.github.com/AndrewBetson/TF-Minecraft/"
 };
-
-// Inline'ing a one-line modification of this plugin to fix a heap size error.
-// Original can be found here: https://forums.alliedmods.net/showthread.php?t=306950
-#include "minecraft/mc_customkeyvalues.sp"
 
 #include "minecraft/minecraft_bans.sp"
 #include "minecraft/minecraft_blocks.sp"
@@ -57,7 +53,6 @@ public void OnPluginStart()
 	LoadTranslations( "minecraft.phrases" );
 	LoadTranslations( "minecraft_blocks.phrases" );
 
-	OnPluginStart_CKV();
 	OnPluginStart_Bans();
 	OnPluginStart_Blocks();
 
@@ -96,6 +91,5 @@ public void OnClientDisconnect( int nClientIdx )
 
 public void OnMapStart()
 {
-	OnMapStart_CKV();
 	OnMapStart_Blocks();
 }

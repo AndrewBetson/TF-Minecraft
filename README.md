@@ -13,6 +13,7 @@ New Features
 - Previously hard-coded messages are now translatable.
 - Block names are now translatable.
 - A rudimentary, clientpref-based ban system has been implemented.
+- Staff can now mark blocks as "protected", making them unbreakable to any non-staff players.
 - Texture sizes have been reduced across the board from 512x256 to 16x16 or 64x32, depending on the block type.
 
 Console Elements
@@ -30,16 +31,25 @@ This plugin exposes the following console elements:
 | `sm_mc_credits` | Print the credits for this plugin to the calling players chat. | N/A | None |
 | `sm_mc_ban` | Ban a player from being able to build and break blocks. | N/A | Requires >= ADMFLAG_BAN command privilege |
 | `sm_mc_unban` | Allow a player to build and break blocks again. | N/A | Requires >= ADMFLAG_UNBAN command privilege |
+| `sm_mc_clear` | Clear all blocks, optionally of a specific type (by index), from the world. | N/A | Requires >= ADMFLAG_BAN command privilege. |
+| `sm_mc_disable` | Disable the building and breaking of blocks until the next mapchange. | N/A | Requires >= ADMFLAG_BAN command privilege. |
+| `sm_mc_protect` | Protect a block from being broken by any non-staff players if it's not already protected, remove protections otherwise. | N/A | Requires >= ADMFLAG_BAN command privilege. |
+
+Dependencies
+==================
+- [morecolors](https://raw.githubusercontent.com/DoctorMcKay/sourcemod-plugins/master/scripting/include/morecolors.inc) (*compilation only*)
 
 License
 ==================
 This plugin, for the time being, retains the original versions MIT licensing.  
 The Minecraft content included in this repo is released under the terms of the "hope neither Mojang nor Microsoft notice or care" license.
 
-Dependencies
+TODO
 ==================
-- [DHooks](https://forums.alliedmods.net/showthread.php?p=2588686#post2588686) (*SM <1.11.6820 only*)
-- [morecolors](https://raw.githubusercontent.com/DoctorMcKay/sourcemod-plugins/master/scripting/include/morecolors.inc) (*compilation only*)
+- Convert `g_BlockDefs` to an ArrayList.
+- Improve `Block_IsPlayerNear` player detection.
+- Look into `TR_GetPlaneNormal` for more robust block-on-block building.
+- Document the arduous process of adding a new block type.
 
 Original README
 ==================

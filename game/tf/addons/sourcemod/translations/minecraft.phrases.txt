@@ -69,6 +69,16 @@
 		"en"	"{green}[Minecraft]{default} You have been unbanned from building and breaking blocks."
 	}
 
+	"MC_Protected"
+	{
+		"en"	"{green}[Minecraft]{default} This %t block is now protected."
+	}
+
+	"MC_Unprotected"
+	{
+		"en"	"{green}[Minecraft]{default} This %t block is no longer protected."
+	}
+
 	// Error messages.
 
 	"MC_CannotBuild_Banned"
@@ -94,6 +104,11 @@
 	"MC_CannotBuild_Teleporter"
 	{
 		"en"	"{green}[Minecraft]{default} Can't build blocks near or above teleporters. Build somewhere else."
+	}
+
+	"MC_BlockProtected"
+	{
+		"en"	"{green}[Minecraft]{default} This block is protected, and cannot be broken by non-staff players."
 	}
 
 	"MC_MustBeAlive"
