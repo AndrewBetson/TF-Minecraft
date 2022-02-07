@@ -509,12 +509,12 @@ public int Menu_BlockSelect( Menu hMenu, MenuAction eAction, int nParam1, int nP
 		}
 		case MenuAction_DisplayItem:
 		{
-			char szBlockIdx[ 32 ];
+			char szBlockIdx[ 4 ];
 			hMenu.GetItem( nParam2, szBlockIdx, sizeof( szBlockIdx ) );
 			int nBlockIdx = StringToInt( szBlockIdx );
 
 			char szBlockName[ 32 ];
-			Format( szBlockName, sizeof( szBlockName ), "%t [%d]", g_BlockDefs[ nBlockIdx ].szPhrase, nParam2 );
+			Format( szBlockName, sizeof( szBlockName ), "%t [%d]", g_BlockDefs[ nBlockIdx ].szPhrase, nParam2 + 1 );
 
 			return RedrawMenuItem( szBlockName );
 		}
