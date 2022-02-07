@@ -4,22 +4,24 @@ New Features
 ==================
 - New blocks, such as: every color of concrete, mushroom stem, red/brown mushroom block, and a new (*very* unfunny) secret block.
 - Blocks can now have unique build/break sound fx.
-- In addition to the above: build/break sound fx are now played as (quiet) world sounds that *every* nearby player can hear, instead of just the builder/breaker.
+- Build/break sound fx are now played as (quiet) world sounds that *every* nearby player can hear, instead of just the builder/breaker.
 - Players can no longer grief teleporters by building blocks near or above them.
 - Blocks can now be broken with *all* melee weapons, not just ones that use hit sounds with a specific naming scheme.
+- Breaking blocks with melee attacks can now be toggled via the `sv_mc_melee_break` convar.
 - Blocks can now be built on the bottom of other blocks.
-- In addition to the above: breaking blocks with melee attacks can now be toggled via the `sv_mc_melee_break` convar.
 - Blocks now store the Steam2 ID of the player that built them, allowing both staff and players alike to more easily figure out who built something rule-breaking.
 - Previously hard-coded messages are now translatable.
 - Block names are now translatable.
+- A rudimentary, clientpref-based ban system has been implemented.
+- Texture sizes have been reduced across the board from 512x256 to 16x16 or 64x32, depending on the block type.
 
 Console Elements
 ==================
 This plugin exposes the following console elements:
 | Name | Description | Default | Notes |
 |------|------|------|------|
-| `sv_mc_block_limit` | Number of blocks that can exist in the world at a time. | 256.0 | Shouldn't be raised higher than 256, unless you want your server to be on the brink of crashing 24/7 |
-| `sv_mc_melee_break` | Allow players to break blocks by hitting them with melee weapons. | 1.0 | None |
+| `sv_mc_block_limit` | Number of blocks that can exist in the world at a time. | 256 | Shouldn't be raised higher than 256, unless you want your server to be on the brink of crashing 24/7 |
+| `sv_mc_melee_break` | Allow players to break blocks by hitting them with melee weapons. | 1 | None |
 | `sm_mc_build`/`sm_build` | Builds a block under the calling players crosshair. | N/A | Calling player must not be block-banned |
 | `sm_mc_break`/`sm_break` | Breaks the block under the calling players crosshair. | N/A | Calling player must not be block-banned |
 | `sm_mc_block`/`sm_block` | Allows the calling player to select a block. | N/A | None |
@@ -31,7 +33,7 @@ This plugin exposes the following console elements:
 
 License
 ==================
-This plugin, for the time being, retains the original versions MIT licensing.
+This plugin, for the time being, retains the original versions MIT licensing.  
 The Minecraft content included in this repo is released under the terms of the "hope neither Mojang nor Microsoft notice or care" license.
 
 Dependencies
