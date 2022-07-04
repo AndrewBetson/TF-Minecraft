@@ -1,6 +1,6 @@
 "VertexLitGeneric"
 {
-	"$basetexture"		"models/minecraft/brick"
+	"$basetexture"		"models/minecraft/bricks"
 
 	"$surfaceprop"		"rock"
 }

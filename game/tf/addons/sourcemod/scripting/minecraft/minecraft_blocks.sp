@@ -121,13 +121,15 @@ void OnPluginStart_Blocks()
 
 	LoadConfig();
 
+	HookEvent( "teamplay_round_start", Event_TeamplayRoundStart, EventHookMode_PostNoCopy );
+
 	g_WorldBlocks = new ArrayList( sizeof( WorldBlock_t ) );
 }
 
 void OnMapStart_Blocks()
 {
 	g_bPluginDisabled = false;
-	g_WorldBlocks.Clear();
+//	g_WorldBlocks.Clear();
 
 	PrecacheContent();
 }
@@ -139,6 +141,11 @@ void OnClientPostAdminCheck_Blocks( int nClientIdx )
 	{
 		CheckClientBan( nClientIdx );
 	}
+}
+
+public void Event_TeamplayRoundStart( Event hEvent, const char[] szName, bool bDontBroadcast )
+{
+	g_WorldBlocks.Clear();
 }
 
 public Action Cmd_MC_Build( int nClientIdx, int nNumArgs )
@@ -547,7 +554,7 @@ public int Menu_BlockSelect( Menu hMenu, MenuAction eAction, int nParam1, int nP
 			int nBlockIdx = StringToInt( szBlockIdx );
 
 			char szBlockName[ 32 ];
-			Format( szBlockName, sizeof( szBlockName ), "%t [%d]", g_BlockDefs[ nBlockIdx ].szPhrase, nParam2 + 1 );
+			Format( szBlockName, sizeof( szBlockName ), "%t [%d]", g_BlockDefs[ nBlockIdx ].szPhrase, nBlockIdx );
 
 			return RedrawMenuItem( szBlockName );
 		}
@@ -629,9 +636,7 @@ public bool Block_IsTeleporterNear( float vOrigin[ 3 ] )
 
 	TR_TraceHullFilter( vStart, vEnd, vMins, vMaxs, MASK_SOLID, TraceEntityFilter_Teleporter );
 
-	return 
-		TR_DidHit( INVALID_HANDLE ) &&
-		TR_GetEntityIndex( INVALID_HANDLE ) != 0;
+	return TR_DidHit( INVALID_HANDLE ) && TR_GetEntityIndex( INVALID_HANDLE ) != 0;
 }
 
 public bool TraceEntityFilter_NotPlayer( int nEntityIdx, int nContentsMask )
