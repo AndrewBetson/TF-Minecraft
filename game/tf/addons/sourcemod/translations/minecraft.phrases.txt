@@ -4,17 +4,17 @@
 
 	"MC_SelectedBlock"
 	{
-		"en"	"{green}[Minecraft]{default} Selected block: %t"
+		"en"	"{green}[Minecraft]{default} Selected block: {unique}%t{default}"
 	}
 
 	"MC_HowMany"
 	{
-		"en"	"{green}[Minecraft]{default} There are currently %d blocks in the world. %d more can be built before the limit is reached."
+		"en"	"{green}[Minecraft]{default} There are currently {unique}%d{default} blocks in the world. {unique}%d{default} more can be built before the limit is reached."
 	}
 
 	"MC_BuiltBy"
 	{
-		"en"	"{green}[Minecraft]{default} Block built by: %s"
+		"en"	"{green}[Minecraft]{default} Block built by: {unique}%s{default}"
 	}
 
 	"MC_Credits"
@@ -27,16 +27,31 @@
 		"en"	"Select a Block"
 	}
 
+	"MC_BanStatus_Banned"
+	{
+		"en"	"{green}[Minecraft]{default} You are block-banned for reason: \"%s\""
+	}
+
+	"MC_BanStatus_NotBanned"
+	{
+		"en"	"{green}[Minecraft]{default} You are not currently block-banned."
+	}
+
 	// Admin commands.
 
 	"MC_ClearedAll"
 	{
-		"en"	"{green}[Minecraft]{default} All Minecraft blocks have been removed from the map."
+		"en"	"{green}[Minecraft]{default} All {green}Minecraft{default} blocks have been removed from the map."
 	}
 
 	"MC_ClearedAllOfType"
 	{
-		"en"	"{green}[Minecraft]{default} All %t blocks have been removed from the map."
+		"en"	"{green}[Minecraft]{default} All {unique}%t{default} blocks have been removed from the map."
+	}
+
+	"MC_ClearedAllPlayer"
+	{
+		"en"	"{green}[Minecraft]{default} All {green}Minecraft{default} blocks built by {unique}%s{default} have been cleared."
 	}
 
 	"MC_Plugin_Disabled"
@@ -57,6 +72,11 @@
 	"MC_Unban_Usage"
 	{
 		"en"	"{green}[Minecraft]{default} Usage: sm_mc_unban <#userid|name>"
+	}
+
+	"MC_ClearPlayer_Usage"
+	{
+		"en"	"{green}[Minecraft]{default} Usage: sm_mc_clear_player <#userid|name>"
 	}
 
 	"MC_Banned"
@@ -80,6 +100,11 @@
 	}
 
 	// Error messages.
+
+	"MC_Disabled_DynamicLimitThreshold"
+	{
+		"en"	"{green}[Minecraft]{default} Resolved dynamic block limit too low, plugin disabled until next mapchange."
+	}
 
 	"MC_CannotBuild_Banned"
 	{
