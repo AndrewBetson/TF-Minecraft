@@ -30,6 +30,8 @@ bool	g_bIsBanned[ MAXPLAYERS + 1 ] = { false, ... };
 
 void OnPluginStart_Bans()
 {
+	RegConsoleCmd( "sm_mc_banstatus", Cmd_MC_BanStatus, "Tell the calling player whether they're block-banned or not." );
+
 	RegAdminCmd( "sm_mc_ban", Cmd_MC_Ban, ADMFLAG_BAN, "Ban a player from being able to build and break Minecraft blocks." );
 	RegAdminCmd( "sm_mc_unban", Cmd_MC_Unban, ADMFLAG_UNBAN, "Allow a player to build and break Minecraft blocks again." );
 
@@ -50,6 +52,23 @@ void OnClientCookiesCached_Bans( int nClientIdx )
 void OnClientDisconnect_Bans( int nClientIdx )
 {
 	g_bIsBanned[ nClientIdx ] = false;
+}
+
+public Action Cmd_MC_BanStatus( int nClientIdx, int nNumArgs )
+{
+	if ( g_bIsBanned[ nClientIdx ] )
+	{
+		char szBanReason[ 179 ];
+		GetClientCookie( nClientIdx, g_hCookie_BanReason, szBanReason, sizeof( szBanReason ) );
+
+		CPrintToChat( nClientIdx, "%t", "MC_BanStatus_Banned", szBanReason );
+	}
+	else
+	{
+		CPrintToChat( nClientIdx, "%t", "MC_BanStatus_NotBanned" );
+	}
+
+	return Plugin_Handled;
 }
 
 public Action Cmd_MC_Ban( int nClientIdx, int nNumArgs )
