@@ -79,6 +79,7 @@ enum struct WorldBlock_t
 	int		nBlockIdx;
 	bool	bProtected;
 	float	vOrigin[ 3 ];
+	int		nBuilderClientIdx;
 
 	bool IsAtOrigin( float vInOrigin[ 3 ] )
 	{
