@@ -471,12 +471,12 @@ public Action Cmd_MC_Clear( int nClientIdx, int nNumArgs )
 }
 
 public Action Cmd_MC_ClearPlayer( int nClientIdx, int nNumArgs )
-		{
+{
 	if ( nNumArgs < 1 )
 	{
 		CReplyToCommand( nClientIdx, "%t", "MC_ClearPlayer_Usage" );
 		return Plugin_Handled;
-		}
+	}
 
 	char szArgs[ 256 ];
 	GetCmdArgString( szArgs, sizeof( szArgs ) );
