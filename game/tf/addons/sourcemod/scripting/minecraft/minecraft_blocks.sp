@@ -92,6 +92,12 @@ int			g_nSelectedBlock[ MAXPLAYERS + 1 ] = { 1, ... };
 
 ConVar		sv_mc_block_limit;
 ConVar		sv_mc_melee_break;
+ConVar		sv_mc_remove_blocks_on_disconnect;
+ConVar		sv_mc_dynamiclimit;
+ConVar		sv_mc_dynamiclimit_bias;
+ConVar		sv_mc_dynamiclimit_threshold;
+
+int			g_nBlockLimit;
 
 bool		g_bPluginDisabled = false;
 
@@ -99,6 +105,10 @@ void OnPluginStart_Blocks()
 {
 	sv_mc_block_limit = CreateConVar( "sv_mc_block_limit", "256", "Number of blocks that can exist in the map at a time.", FCVAR_NOTIFY );
 	sv_mc_melee_break = CreateConVar( "sv_mc_melee_break", "1", "Allow players to break blocks by hitting them with melee weapons.", FCVAR_NOTIFY, true, 0.0, true, 1.0 );
+	sv_mc_remove_blocks_on_disconnect = CreateConVar( "sv_mc_remove_blocks_on_disconnect", "0", "Remove all blocks built by a player when they leave the server.", FCVAR_NONE, true, 0.0, true, 1.0 );
+	sv_mc_dynamiclimit = CreateConVar( "sv_mc_dynamiclimit", "0", "Use a dynamic block limit based on the number of edicts in the map and the servers sv_lowedict_threshold value.", FCVAR_NONE, true, 0.0, true, 1.0 );
+	sv_mc_dynamiclimit_bias = CreateConVar( "sv_mc_dynamiclimit_bias", "500", "Constant amount to subtract from dynamic block limit.", FCVAR_NONE, true, 1.0, true, 2047.0 );
+	sv_mc_dynamiclimit_threshold = CreateConVar( "sv_mc_dynamiclimit_threshold", "50", "If the resolved dynamic limit is less than this amount, disable the plugin until next mapchange." );
 
 	RegConsoleCmd( "sm_mc_build", Cmd_MC_Build, "Build currently selected block." );
 	RegConsoleCmd( "sm_mc_break", Cmd_MC_Break, "Break block under cursor." );
@@ -140,6 +150,43 @@ void OnClientPostAdminCheck_Blocks( int nClientIdx )
 	if ( g_bIsBanned[ nClientIdx ] )
 	{
 		CheckClientBan( nClientIdx );
+	}
+}
+
+void OnClientDisconnect_Blocks( int nClientIdx )
+{
+	if ( sv_mc_remove_blocks_on_disconnect.BoolValue )
+	{
+		for ( int i = 0; i < g_WorldBlocks.Length; i++ )
+		{
+			if ( g_WorldBlocks.Get( i, WorldBlock_t::nBuilderClientIdx ) == nClientIdx )
+			{
+				AcceptEntityInput( EntRefToEntIndex( g_WorldBlocks.Get( i, WorldBlock_t::nEntityRef ) ), "Kill" );
+				g_WorldBlocks.Erase( i );
+				i--;
+			}
+		}
+	}
+}
+
+void OnConfigsExecuted_Blocks()
+{
+	if ( sv_mc_dynamiclimit.BoolValue )
+	{
+		int nLowEdictThreshold = GetConVarInt( FindConVar( "sv_lowedict_threshold" ) );
+		int nNumMapEnts = GetEntityCount();
+		int nDynamicLimitBias = sv_mc_dynamiclimit_bias.IntValue;
+
+		g_nBlockLimit = 2048 - nLowEdictThreshold - nNumMapEnts - nDynamicLimitBias;
+		if ( g_nBlockLimit < sv_mc_dynamiclimit_threshold.IntValue )
+		{
+			g_bPluginDisabled = true;
+			CPrintToChatAll( "%t", "MC_Disabled_DynamicLimitThreshold" );
+		}
+	}
+	else
+	{
+		g_nBlockLimit = sv_mc_block_limit.IntValue;
 	}
 }
 
@@ -185,9 +232,9 @@ public Action Cmd_MC_Build( int nClientIdx, int nNumArgs )
 	if ( g_nSelectedBlock[ nClientIdx ] < 1 )	g_nSelectedBlock[ nClientIdx ] = 1;
 	if ( g_nSelectedBlock[ nClientIdx ] > 128 )	g_nSelectedBlock[ nClientIdx ] = 128;
 
-	if ( g_WorldBlocks.Length >= sv_mc_block_limit.IntValue )
+	if ( g_WorldBlocks.Length >= g_nBlockLimit )
 	{
-		CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_TooManyBlocks", sv_mc_block_limit.IntValue );
+		CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_TooManyBlocks", g_nBlockLimit );
 		return Plugin_Handled;
 	}
 
@@ -284,6 +331,7 @@ public Action Cmd_MC_Build( int nClientIdx, int nNumArgs )
 		NewWorldBlock.nBlockIdx = nSelected;
 		NewWorldBlock.bProtected = false;
 		NewWorldBlock.vOrigin = vHitPoint;
+		NewWorldBlock.nBuilderClientIdx = nClientIdx;
 
 		g_WorldBlocks.PushArray( NewWorldBlock );
 
@@ -377,7 +425,7 @@ public Action Cmd_MC_Block( int nClientIdx, int nNumArgs )
 
 public Action Cmd_MC_HowMany( int nClientIdx, int nNumArgs )
 {
-	CPrintToChat( nClientIdx, "%t", "MC_HowMany", g_WorldBlocks.Length, sv_mc_block_limit.IntValue - g_WorldBlocks.Length );
+	CPrintToChat( nClientIdx, "%t", "MC_HowMany", g_WorldBlocks.Length, g_nBlockLimit - g_WorldBlocks.Length );
 	return Plugin_Handled;
 }
 
