@@ -126,6 +126,7 @@ void OnPluginStart_Blocks()
 	RegConsoleCmd( "sm_limit", Cmd_MC_HowMany, "Display current number of blocks in the world." );
 
 	RegAdminCmd( "sm_mc_clear", Cmd_MC_Clear, ADMFLAG_BAN, "Remove all Minecraft blocks, optionally of a specific type, from the world." );
+	RegAdminCmd( "sm_mc_clear_player", Cmd_MC_ClearPlayer, ADMFLAG_BAN, "Remove all Minecraft blocks built by a particular player." );
 	RegAdminCmd( "sm_mc_disable", Cmd_MC_Disable, ADMFLAG_BAN, "Disable the building and breaking of Minecraft blocks until the next mapchange." );
 	RegAdminCmd( "sm_mc_protect", Cmd_MC_Protect, ADMFLAG_BAN, "Protect a block from being broken by any non-staff players if it's not already protected, remove protections otherwise." );
 
@@ -139,7 +140,7 @@ void OnPluginStart_Blocks()
 void OnMapStart_Blocks()
 {
 	g_bPluginDisabled = false;
-//	g_WorldBlocks.Clear();
+	g_WorldBlocks.Clear();
 
 	PrecacheContent();
 }
@@ -459,14 +460,35 @@ public Action Cmd_MC_Clear( int nClientIdx, int nNumArgs )
 	}
 	else
 	{
-		for ( int i = g_WorldBlocks.Length - 1; i >= 0; --i )
-		{
-			AcceptEntityInput( EntRefToEntIndex( g_WorldBlocks.Get( i, WorldBlock_t::nEntityRef ) ), "Kill" );
-			g_WorldBlocks.Erase( i );
-		}
+		Block_ClearAll();
 		CPrintToChatAll( "%t", "MC_ClearedAll" );
-		g_WorldBlocks.Clear();
 	}
+
+	return Plugin_Handled;
+}
+
+public Action Cmd_MC_ClearPlayer( int nClientIdx, int nNumArgs )
+		{
+	if ( nNumArgs < 1 )
+	{
+		CReplyToCommand( nClientIdx, "%t", "MC_ClearPlayer_Usage" );
+		return Plugin_Handled;
+		}
+
+	char szArgs[ 256 ];
+	GetCmdArgString( szArgs, sizeof( szArgs ) );
+
+	char szTargetName[ 65 ];
+	BreakString( szArgs, szTargetName, sizeof( szTargetName ) );
+
+	int nTargetClientIdx = FindTarget( nClientIdx, szTargetName, true );
+	if ( nTargetClientIdx == -1 )
+	{
+		return Plugin_Handled;
+	}
+
+	Block_ClearPlayer( nTargetClientIdx );
+	CPrintToChat( nClientIdx, "%t", "MC_ClearedAllPlayer", szTargetName );
 
 	return Plugin_Handled;
 }
@@ -539,6 +561,16 @@ public void Block_TryBreak( int nClientIdx )
 	}
 }
 
+public void Block_ClearAll()
+{
+	for ( int i = g_WorldBlocks.Length - 1; i >= 0; --i )
+	{
+		AcceptEntityInput( EntRefToEntIndex( g_WorldBlocks.Get( i, WorldBlock_t::nEntityRef ) ), "Kill" );
+		g_WorldBlocks.Erase( i );
+	}
+	g_WorldBlocks.Clear();
+}
+
 public void Block_ClearType( int nClientIdx, int nBlockIdx )
 {
 	if( nBlockIdx <= 0 || nBlockIdx >= MAXBLOCKINDICES )
@@ -564,6 +596,24 @@ public void Block_ClearType( int nClientIdx, int nBlockIdx )
 	}
 
 	CPrintToChatAll( "%t", "MC_ClearedAllOfType", g_BlockDefs[ nBlockIdx ].szPhrase );
+}
+
+public void Block_ClearPlayer( int nClientIdx )
+{
+	if ( !IsClientInGame( nClientIdx ) )
+	{
+		return;
+	}
+
+	for ( int i = 0; i < g_WorldBlocks.Length; i++ )
+	{
+		if ( g_WorldBlocks.Get( i, WorldBlock_t::nBuilderClientIdx ) == nClientIdx )
+		{
+			AcceptEntityInput( EntRefToEntIndex( g_WorldBlocks.Get( i, WorldBlock_t::nEntityRef ) ), "Kill" );
+			g_WorldBlocks.Erase( i );
+			i--;
+		}
+	}
 }
 
 public void Block_Select( int nClientIdx, int nBlockIdx )
