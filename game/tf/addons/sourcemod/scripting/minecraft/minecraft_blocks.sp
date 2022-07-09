@@ -113,6 +113,7 @@ void OnPluginStart_Blocks()
 	RegConsoleCmd( "sm_mc_build", Cmd_MC_Build, "Build currently selected block." );
 	RegConsoleCmd( "sm_mc_break", Cmd_MC_Break, "Break block under cursor." );
 	RegConsoleCmd( "sm_mc_block", Cmd_MC_Block, "Select a block." );
+	RegConsoleCmd( "sm_mc_blocks", Cmd_MC_Block, "Select a block." );
 	RegConsoleCmd( "sm_mc_howmany", Cmd_MC_HowMany, "Print the current number of blocks in the world." );
 	RegConsoleCmd( "sm_mc_builtby", Cmd_MC_BuiltBy, "Print the SteamID of the player that built the block under the calling players cursor." );
 	RegConsoleCmd( "sm_mc_credits", Cmd_MC_Credits, "Print the credits for this plugin." );
@@ -123,6 +124,7 @@ void OnPluginStart_Blocks()
 	RegConsoleCmd( "sm_build", Cmd_MC_Build, "Build current selected block." );
 	RegConsoleCmd( "sm_break", Cmd_MC_Break, "Break block under cursor." );
 	RegConsoleCmd( "sm_block", Cmd_MC_Block, "Select a block." );
+	RegConsoleCmd( "sm_blocks", Cmd_MC_Block, "Select a block." );
 	RegConsoleCmd( "sm_limit", Cmd_MC_HowMany, "Display current number of blocks in the world." );
 
 	RegAdminCmd( "sm_mc_clear", Cmd_MC_Clear, ADMFLAG_BAN, "Remove all Minecraft blocks, optionally of a specific type, from the world." );
