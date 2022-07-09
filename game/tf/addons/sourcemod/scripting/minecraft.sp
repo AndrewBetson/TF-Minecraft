@@ -30,7 +30,6 @@
 #include <tf2_stocks>
 
 #include <morecolors>
-//#include <customkeyvalues>
 
 #pragma semicolon 1
 #pragma newdecls required
@@ -59,16 +58,16 @@ public void OnPluginStart()
 	AutoExecConfig( true, "minecraft" );
 
 	// Late-load/reload support.
-	for ( int nIdx = 1; nIdx <= MaxClients; nIdx++ )
+	for ( int i = 1; i <= MaxClients; i++ )
 	{
-		if ( IsClientInGame( nIdx ) )
+		if ( IsClientInGame( i ) )
 		{
 			// Going to assume that IsClientInGame returning true implies that said client has also been authenticated.
-			OnClientPostAdminCheck( nIdx );
+			OnClientPostAdminCheck( i );
 
-			if ( AreClientCookiesCached( nIdx ) )
+			if ( AreClientCookiesCached( i ) )
 			{
-				OnClientCookiesCached( nIdx );
+				OnClientCookiesCached( i );
 			}
 		}
 	}
@@ -87,9 +86,15 @@ public void OnClientCookiesCached( int nClientIdx )
 public void OnClientDisconnect( int nClientIdx )
 {
 	OnClientDisconnect_Bans( nClientIdx );
+	OnClientDisconnect_Blocks( nClientIdx );
 }
 
 public void OnMapStart()
 {
 	OnMapStart_Blocks();
+}
+
+public void OnConfigsExecuted()
+{
+	OnConfigsExecuted_Blocks();
 }
