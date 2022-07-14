@@ -115,6 +115,7 @@ void OnPluginStart_Blocks()
 	RegConsoleCmd( "sm_mc_break", Cmd_MC_Break, "Break block under cursor." );
 	RegConsoleCmd( "sm_mc_block", Cmd_MC_Block, "Select a block." );
 	RegConsoleCmd( "sm_mc_blocks", Cmd_MC_Block, "Select a block." );
+	RegConsoleCmd( "sm_mc_pick", Cmd_MC_Pick, "Select block under cursor." );
 	RegConsoleCmd( "sm_mc_howmany", Cmd_MC_HowMany, "Print the current number of blocks in the world." );
 	RegConsoleCmd( "sm_mc_builtby", Cmd_MC_BuiltBy, "Print the SteamID of the player that built the block under the calling players cursor." );
 	RegConsoleCmd( "sm_mc_credits", Cmd_MC_Credits, "Print the credits for this plugin." );
@@ -423,6 +424,38 @@ public Action Cmd_MC_Block( int nClientIdx, int nNumArgs )
 
 	menu.ExitButton = true;
 	menu.Display( nClientIdx, 32 );
+
+	return Plugin_Handled;
+}
+
+public Action Cmd_MC_Pick( int nClientIdx, int nNumArgs )
+{
+	int nTarget = GetClientAimTarget( nClientIdx, false );
+	if ( IsValidBlock( nTarget ) )
+	{
+		int nBlockArrayIdx = g_WorldBlocks.FindValue( EntIndexToEntRef( nTarget ), WorldBlock_t::nEntityRef );
+		if ( nBlockArrayIdx == -1 )
+		{
+			return Plugin_Handled;
+		}
+
+		float vClientPos[ 3 ];
+		GetEntPropVector( nClientIdx, Prop_Send, "m_vecOrigin", vClientPos );
+
+		float vTargetPos[ 3 ];
+		GetEntPropVector( nTarget, Prop_Send, "m_vecOrigin", vTargetPos );
+
+		if ( GetVectorDistance( vClientPos, vTargetPos ) > 300 )
+		{
+			EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
+			return Plugin_Handled;
+		}
+
+		int nBlockIdx = g_WorldBlocks.Get( nBlockArrayIdx, WorldBlock_t::nBlockIdx );
+		g_nSelectedBlock[ nClientIdx ] = nBlockIdx;
+
+		CPrintToChat( nClientIdx, "%t", "MC_SelectedBlock", g_BlockDefs[ nBlockIdx ].szPhrase );
+	}
 
 	return Plugin_Handled;
 }
