@@ -214,9 +214,12 @@ public Action Cmd_MC_Build( int nClientIdx, int nNumArgs )
 
 	if ( g_bPluginDisabled )
 	{
-		CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_Disabled" );
-		EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
-		return Plugin_Handled;
+		if ( !GetUserAdmin( nClientIdx ).HasFlag( Admin_Kick ) )
+		{
+			CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_Disabled" );
+			EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
+			return Plugin_Handled;
+		}
 	}
 
 	if ( !IsPlayerAlive( nClientIdx ) )
@@ -378,8 +381,11 @@ public Action Cmd_MC_Break( int nClientIdx, int nNumArgs )
 {
 	if ( g_bPluginDisabled )
 	{
-		CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_Disabled" );
-		return Plugin_Handled;
+		if ( !GetUserAdmin( nClientIdx ).HasFlag( Admin_Kick ) )
+		{
+			CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_Disabled" );
+			return Plugin_Handled;
+		}
 	}
 
 	if ( g_bIsBanned[ nClientIdx ] )
