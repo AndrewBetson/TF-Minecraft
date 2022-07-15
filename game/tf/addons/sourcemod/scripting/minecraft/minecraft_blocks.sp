@@ -212,9 +212,11 @@ public Action Cmd_MC_Build( int nClientIdx, int nNumArgs )
 		return Plugin_Handled;
 	}
 
+	bool bIsClientAdmin = GetUserAdmin( nClientIdx ).HasFlag( Admin_Ban );
 	if ( g_bPluginDisabled )
 	{
-		if ( !GetUserAdmin( nClientIdx ).HasFlag( Admin_Kick ) )
+		// For some reason &&'ing this with g_bPluginDisabled doesn't work?
+		if ( !bIsClientAdmin )
 		{
 			CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_Disabled" );
 			EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
@@ -298,13 +300,16 @@ public Action Cmd_MC_Build( int nClientIdx, int nNumArgs )
 		}
 	}
 
+	// Not adding an exception for staff to this one
+	// because this is a lot easier to do on accident
+	// than building too close to a teleporter.
 	if ( Block_IsPlayerNear( vHitPoint ) )
 	{
 		EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
 		return Plugin_Handled;
 	}
 
-	if ( Block_IsTeleporterNear( vHitPoint ) )
+	if ( Block_IsTeleporterNear( vHitPoint ) && !bIsClientAdmin )
 	{
 		CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_Teleporter" );
 		EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
@@ -381,7 +386,7 @@ public Action Cmd_MC_Break( int nClientIdx, int nNumArgs )
 {
 	if ( g_bPluginDisabled )
 	{
-		if ( !GetUserAdmin( nClientIdx ).HasFlag( Admin_Kick ) )
+		if ( !GetUserAdmin( nClientIdx ).HasFlag( Admin_Ban ) )
 		{
 			CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_Disabled" );
 			return Plugin_Handled;
