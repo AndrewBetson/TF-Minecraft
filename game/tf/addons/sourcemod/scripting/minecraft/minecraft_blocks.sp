@@ -94,6 +94,7 @@ int			g_nSelectedBlock[ MAXPLAYERS + 1 ] = { 1, ... };
 ConVar		sv_mc_block_limit;
 ConVar		sv_mc_melee_break;
 ConVar		sv_mc_remove_blocks_on_disconnect;
+ConVar		sv_mc_auto_protect_staff_blocks;
 ConVar		sv_mc_dynamiclimit;
 ConVar		sv_mc_dynamiclimit_bias;
 ConVar		sv_mc_dynamiclimit_threshold;
@@ -107,6 +108,7 @@ void OnPluginStart_Blocks()
 	sv_mc_block_limit = CreateConVar( "sv_mc_block_limit", "256", "Number of blocks that can exist in the map at a time.", FCVAR_NOTIFY );
 	sv_mc_melee_break = CreateConVar( "sv_mc_melee_break", "1", "Allow players to break blocks by hitting them with melee weapons.", FCVAR_NOTIFY, true, 0.0, true, 1.0 );
 	sv_mc_remove_blocks_on_disconnect = CreateConVar( "sv_mc_remove_blocks_on_disconnect", "0", "Remove all blocks built by a player when they leave the server.", FCVAR_NONE, true, 0.0, true, 1.0 );
+	sv_mc_auto_protect_staff_blocks = CreateConVar( "sv_mc_auto_protect_staff_blocks", "1", "Automatically protect blocks built by staff players.", FCVAR_NONE, true, 0.0, true, 1.0 );
 	sv_mc_dynamiclimit = CreateConVar( "sv_mc_dynamiclimit", "0", "Use a dynamic block limit based on the number of edicts in the map and the servers sv_lowedict_threshold value.", FCVAR_NONE, true, 0.0, true, 1.0 );
 	sv_mc_dynamiclimit_bias = CreateConVar( "sv_mc_dynamiclimit_bias", "500", "Constant amount to subtract from dynamic block limit.", FCVAR_NONE, true, 1.0, true, 2047.0 );
 	sv_mc_dynamiclimit_threshold = CreateConVar( "sv_mc_dynamiclimit_threshold", "50", "If the resolved dynamic limit is less than this amount, disable the plugin until next mapchange." );
@@ -342,7 +344,7 @@ public Action Cmd_MC_Build( int nClientIdx, int nNumArgs )
 		WorldBlock_t NewWorldBlock;
 		NewWorldBlock.nEntityRef = EntIndexToEntRef( nEnt );
 		NewWorldBlock.nBlockIdx = nSelected;
-		NewWorldBlock.bProtected = false;
+		NewWorldBlock.bProtected = bIsClientAdmin && sv_mc_auto_protect_staff_blocks.BoolValue ? true : false;
 		NewWorldBlock.vOrigin = vHitPoint;
 		NewWorldBlock.nBuilderClientIdx = nClientIdx;
 
