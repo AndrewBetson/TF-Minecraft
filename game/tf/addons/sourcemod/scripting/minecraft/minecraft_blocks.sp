@@ -384,10 +384,18 @@ public Action Cmd_MC_Build( int nClientIdx, int nNumArgs )
 		SetEntProp( nEnt, Prop_Send, "m_nSkin", g_BlockDefs[ nSelected ].nSkin );
 		SetEntProp( nEnt, Prop_Send, "m_nSolidType", 6 );
 
+		char szClientName[ MAX_NAME_LENGTH ];
+		GetClientName( nClientIdx, szClientName, sizeof( szClientName ) );
+
+		CRemoveTags( szClientName, sizeof( szClientName ) );
+
 		char szClientAuthString[ 32 ];
 		GetClientAuthId( nClientIdx, AuthId_Steam2, szClientAuthString, sizeof( szClientAuthString ) );
 
-		DispatchKeyValue( nEnt, "targetname", szClientAuthString );
+		char szBlockTargetName[ 160 ];
+		Format( szBlockTargetName, sizeof( szBlockTargetName ), "%s (%s)", szClientName, szClientAuthString );
+
+		DispatchKeyValue( nEnt, "targetname", szBlockTargetName );
 
 		SetEntityModel( nEnt, g_BlockDefs[ nSelected ].szModel );
 
