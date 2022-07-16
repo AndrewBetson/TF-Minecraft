@@ -4,12 +4,12 @@ New Features
 ==================
 - New blocks, such as: every color of concrete, mushroom stem, red/brown mushroom block, and a new secret block.
 - Blocks can now have unique build/break sound fx.
-- Build/break sound fx are now played as (quiet) world sounds that *every* nearby player can hear, instead of just the builder/breaker.
-- Players can no longer grief teleporters by building blocks near or above them.
+- Build/break sound fx are now played as world sounds that nearby players can hear, instead of just the builder/breaker.
+- Non-staff players can no longer grief teleporters by building blocks near or above them.
 - Blocks can now be broken with *all* melee weapons, not just ones that use hit sounds with a specific naming scheme.
 - Breaking blocks with melee attacks can now be toggled via the `sv_mc_melee_break` convar.
 - Blocks can now be built on the bottom of other blocks.
-- Blocks now store the Steam2 ID of the player that built them, allowing both staff and players alike to more easily figure out who built something rule-breaking.
+- Blocks now store the name and Steam2 ID of the player that built them, allowing both staff and players alike to more easily figure out who built something rule-breaking.
 - Previously hard-coded messages are now translatable.
 - Block names are now translatable.
 - A rudimentary, clientpref-based ban system has been implemented.
@@ -24,12 +24,14 @@ This plugin exposes the following console elements:
 | `sv_mc_block_limit` | Number of blocks that can exist in the world at a time. | 256 | Consider using map configs to raise/lower this per-map. |
 | `sv_mc_melee_break` | Allow players to break blocks by hitting them with melee weapons. | 1 | None |
 | `sv_mc_remove_blocks_on_disconnect` | Remove blocks built by players when they leave the server. | 0 | None |
-| `sv_mc_dynamiclimit` | Enable the use of a dynamic block limit based on the number of entities in the map and the servers `sv_lowedict_threshold` value. | 0 |
+| `sv_mc_auto_protect_staff_blocks` | Automatically protect blocks built by staff players. | 1 | None |
+| `sv_mc_dynamiclimit` | Enable the use of a dynamic block limit based on the number of entities in the map and the servers `sv_lowedict_threshold` value. | 0 | None |
 | `sv_mc_dynamiclimit_bias` | Constant number to subtract from resolved dynamic limit to account for post-map-load edicts such as players. | 500 | Servers with lower maxplayer counts may want to lower this. |
-| `sv_mc_dynamiclimit_threshold` | If the resolved limit is lower than this number, disable the plugin until the next mapchange. | 50 | 
+| `sv_mc_dynamiclimit_threshold` | If the resolved limit is lower than this number, disable the plugin until the next mapchange. | 50 | None |
 | `sm_mc_build`/`sm_build` | Builds a block under the calling players crosshair. | N/A | Calling player must not be block-banned |
 | `sm_mc_break`/`sm_break` | Breaks the block under the calling players crosshair. | N/A | Calling player must not be block-banned |
 | `sm_mc_block(s)`/`sm_block(s)` | Allows the calling player to select a block. | N/A | None |
+| `sm_mc_pick` | Select the block under the calling players cursor. | N/A | None |
 | `sm_mc_howmany`/`sm_limit` | Print the current number of blocks in the world to the calling player. | N/A | None |
 | `sm_mc_builtby` | Print the SteamID of the player that built the block under the calling players cursor. | N/A | None |
 | `sm_mc_credits` | Print the credits for this plugin to the calling players chat. | N/A | None |
@@ -46,12 +48,12 @@ Dependencies
 
 License
 ==================
-This plugin, for the time being, retains the original versions MIT licensing.  
+This plugin retains the original versions MIT licensing.  
 The Minecraft content included in this repo is released under the terms of the "hope neither Mojang nor Microsoft notice or care" license.
 
 TODO
 ==================
-- Improve player/teleporter proximity detection.
+- Add natives for other plugins to interface with.
 - Look into `TR_GetPlaneNormal` for more robust block-on-block building.
 - Document the arduous process of adding a new block type.
 
