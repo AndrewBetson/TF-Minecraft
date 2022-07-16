@@ -784,15 +784,13 @@ public bool Block_IsBlockAtOrigin( float vOrigin[ 3 ] )
 
 public bool Block_IsPlayerNear( float vOrigin[ 3 ] )
 {
-	// TODO(AndrewB): Check for players with TR_EnumerateEntitiesSphere() when SM 1.11 goes stable.
-
 	for ( int i = 1; i < MaxClients; i++ )
 	{
 		if ( IsClientInGame( i ) && IsPlayerAlive( i ) )
 		{
 			float vPlayerOrigin[ 3 ];
 			GetEntPropVector( i, Prop_Send, "m_vecOrigin", vPlayerOrigin, 0 );
-			if ( GetVectorDistance( vOrigin, vPlayerOrigin ) < 60.0 )
+			if ( GetVectorDistance( vOrigin, vPlayerOrigin ) < 64.0 )
 			{
 				return true;
 			}
@@ -801,7 +799,7 @@ public bool Block_IsPlayerNear( float vOrigin[ 3 ] )
 
 	return false;
 
-/** TODO(AndrewB): This has a few problems, but would be way better than the above method. Get it working.
+/*	TODO(AndrewB): For some reason the entity filter method just *doesn't get called*, figure out why.
 
 	float vStart[ 3 ];
 	vStart[ 0 ] = vOrigin[ 0 ];
@@ -809,13 +807,11 @@ public bool Block_IsPlayerNear( float vOrigin[ 3 ] )
 	vStart[ 2 ] = vOrigin[ 2 ] + 50.0; // Trace from the top of the block.
 
 	float vMins[ 3 ] = { -25.0, -25.0, 0.0 };
-	float vMaxs[ 3 ] = { 25.0, 25.0, 50.0 };
+	float vMaxs[ 3 ] = { 25.0, 25.0, 0.0 };
 
 	TR_TraceHullFilter( vStart, vOrigin, vMins, vMaxs, MASK_SOLID, TraceEntityFilter_Player );
 
-	return
-		TR_DidHit( INVALID_HANDLE ) &&
-		TR_GetEntityIndex( INVALID_HANDLE ) != 0;
+	return TR_DidHit( INVALID_HANDLE ) && TR_GetEntityIndex( INVALID_HANDLE ) != 0;
 */
 }
 
@@ -824,15 +820,15 @@ public bool Block_IsTeleporterNear( float vOrigin[ 3 ] )
 	float vStart[ 3 ];
 	vStart[ 0 ] = vOrigin[ 0 ];
 	vStart[ 1 ] = vOrigin[ 1 ];
-	vStart[ 2 ] = vOrigin[ 2 ] + 25.0; // Trace from the center of the block.
+	vStart[ 2 ] = vOrigin[ 2 ] + 50.0; // Trace from the top of the block.
 
 	float vEnd[ 3 ];
 	vEnd[ 0 ] = vOrigin[ 0 ];
 	vEnd[ 1 ] = vOrigin[ 1 ];
-	vEnd[ 2 ] = vOrigin[ 2 ] - 120.0; // Teleporters require 95hu (+ 25hu to account for the trace start point) of space above them to not destroy themselves on use.
+	vEnd[ 2 ] = vOrigin[ 2 ] - 95.0; // Teleporters require 95hu of space above them to not destroy themselves on use.
 
 	float vMins[ 3 ] = { -25.0, -25.0, 0.0 };
-	float vMaxs[ 3 ] = { 25.0, 25.0, 50.0 };
+	float vMaxs[ 3 ] = { 25.0, 25.0, 0.0 };
 
 	TR_TraceHullFilter( vStart, vEnd, vMins, vMaxs, MASK_SOLID, TraceEntityFilter_Teleporter );
 
@@ -850,6 +846,7 @@ public bool TraceEntityFilter_Player( int nEntityIdx, int nContentsMask )
 	{
 		return IsClientInGame( nEntityIdx ) && IsPlayerAlive( nEntityIdx );
 	}
+
 	return false;
 }
 
