@@ -31,6 +31,10 @@
 
 #include <morecolors>
 
+#undef REQUIRE_PLUGIN
+#tryinclude <trustfactor>
+#define REQUIRE_PLUGIN
+
 #pragma semicolon 1
 #pragma newdecls required
 
@@ -42,6 +46,18 @@ public Plugin myinfo =
 	version		= "2.3.0",
 	url			= "https://www.github.com/AndrewBetson/TF-Minecraft/"
 };
+
+#if defined _trustfactor_included
+
+bool			g_bHasTrustFactor;
+TrustCondition	g_hTrustCond;
+
+ConVar			sv_mc_trustfactor_enable;
+ConVar			sv_mc_trustfactor_flags;
+
+bool			g_bIsClientTrusted[ MAXPLAYERS + 1 ];
+
+#endif // defined _trustfactor_included
 
 #include "minecraft/minecraft_bans.sp"
 #include "minecraft/minecraft_blocks.sp"
@@ -55,12 +71,33 @@ public void OnPluginStart()
 	OnPluginStart_Bans();
 	OnPluginStart_Blocks();
 
+#if defined _trustfactor_included
+	sv_mc_trustfactor_enable = CreateConVar(
+		"sv_mc_trustfactor_enable",
+		"1",
+		"Whether or not to make use of the TrustFactor plugin by reBane/DosMike if it is detected.",
+		FCVAR_NONE,
+		true, 0.0,
+		true, 1.0
+	);
+
+	sv_mc_trustfactor_flags = CreateConVar(
+		"sv_mc_trustfactor_flags",
+		"t",
+		"Which trust factor flag(s) to use. See the TrustFactor plugin documentation for a list of flags and their effects.",
+		FCVAR_NONE,
+		true, 0.0,
+		true, 1.0
+	);
+	sv_mc_trustfactor_flags.AddChangeHook( ConVar_TrustFactor_Flags );
+#endif // defined _trustfactor_included
+
 	AutoExecConfig( true, "minecraft" );
 
 	// Late-load/reload support.
 	for ( int i = 1; i <= MaxClients; i++ )
 	{
-		if ( IsClientInGame( i ) )
+		if ( IsClientInGame( i ) && !IsFakeClient( i ) )
 		{
 			// Going to assume that IsClientInGame returning true implies that said client has also been authenticated.
 			OnClientPostAdminCheck( i );
@@ -69,8 +106,19 @@ public void OnPluginStart()
 			{
 				OnClientCookiesCached( i );
 			}
+
+		#if defined _trustfactor_included
+			OnClientTrustFactorLoaded( i, GetClientTrustFactors( i ) );
+		#endif // defined _trustfactor_included
 		}
 	}
+
+#if defined _trustfactor_included
+	char szBuf[ 32 ];
+	sv_mc_trustfactor_flags.GetString( szBuf, sizeof( szBuf ) );
+
+	g_hTrustCond.Parse( szBuf );
+#endif // defined _trustfactor_included
 }
 
 public void OnClientPostAdminCheck( int nClientIdx )
@@ -85,6 +133,10 @@ public void OnClientCookiesCached( int nClientIdx )
 
 public void OnClientDisconnect( int nClientIdx )
 {
+#if defined _trustfactor_included
+	g_bIsClientTrusted[ nClientIdx ] = false;
+#endif // defined _trustfactor_included
+
 	OnClientDisconnect_Bans( nClientIdx );
 	OnClientDisconnect_Blocks( nClientIdx );
 }
@@ -98,3 +150,45 @@ public void OnConfigsExecuted()
 {
 	OnConfigsExecuted_Blocks();
 }
+
+#if defined _trustfactor_included
+
+public void OnAllPluginsLoaded()
+{
+	g_bHasTrustFactor = LibraryExists( "trustfactor" );
+}
+
+public void OnLibraryAdded( const char[] szName )
+{
+	if ( StrEqual( szName, "trustfactor" ) ) g_bHasTrustFactor = true;
+}
+
+public void OnLibraryRemoved( const char[] szName )
+{
+	if ( StrEqual( szName, "trustfactor" ) ) g_bHasTrustFactor = false;
+}
+
+public void OnClientTrustFactorLoaded( int nClientIdx, TrustFactors eFactors )
+{
+	g_bIsClientTrusted[ nClientIdx ] = g_hTrustCond.Test( nClientIdx );
+}
+
+public void OnClientTrustFactorChanged( int nClientIdx, TrustFactors eOldFactors, TrustFactors eNewFactors )
+{
+	// BUG(AndrewB): For some reason this callback doesn't seem to get called when it's supposed to...
+	g_bIsClientTrusted[ nClientIdx ] = g_hTrustCond.Test( nClientIdx );
+}
+
+public void ConVar_TrustFactor_Flags( ConVar hConVar, char[] szOldValue, char[] szNewValue )
+{
+	g_hTrustCond.Parse( szNewValue );
+	for ( int i = 0; i <= MaxClients; i++ )
+	{
+		if ( IsClientInGame( i ) && !IsFakeClient( i ) )
+		{
+			g_bIsClientTrusted[ i ] = g_hTrustCond.Test( i );
+		}
+	}
+}
+
+#endif // _trustfactor_included

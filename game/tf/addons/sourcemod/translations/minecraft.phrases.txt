@@ -106,6 +106,11 @@
 		"en"	"{green}[Minecraft]{default} Resolved dynamic block limit too low, plugin disabled until next mapchange."
 	}
 
+	"MC_CannotBuild_NotTrusted"
+	{
+		"en"	"{green}[Minecraft]{default} You are not allowed to build or break blocks as you do not meet this servers trust requirements."
+	}
+
 	"MC_CannotBuild_Banned"
 	{
 		"en"	"{green}[Minecraft]{default} You are banned from building and breaking blocks."

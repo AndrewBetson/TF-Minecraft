@@ -286,6 +286,15 @@ public Action Cmd_MC_Build( int nClientIdx, int nNumArgs )
 		return Plugin_Handled;
 	}
 
+#if defined _trustfactor_included
+	if ( g_bHasTrustFactor && !g_bIsClientTrusted[ nClientIdx ] && sv_mc_trustfactor_enable.BoolValue )
+	{
+		CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_NotTrusted" );
+		EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
+		return Plugin_Handled;
+	}
+#endif // defined _trustfactor_included
+
 	if ( g_bIsBanned[ nClientIdx ] )
 	{
 		CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_Banned" );
@@ -455,6 +464,15 @@ public Action Cmd_MC_Break( int nClientIdx, int nNumArgs )
 			return Plugin_Handled;
 		}
 	}
+
+#if defined _trustfactor_included
+	if ( g_bHasTrustFactor && !g_bIsClientTrusted[ nClientIdx ] && sv_mc_trustfactor_enable.BoolValue )
+	{
+		CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_NotTrusted" );
+		EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
+		return Plugin_Handled;
+	}
+#endif // defined _trustfactor_included
 
 	if ( g_bIsBanned[ nClientIdx ] )
 	{
@@ -925,6 +943,15 @@ public Action Block_OnTakeDamage(
 			{
 				return Plugin_Continue;
 			}
+
+		#if defined _trustfactor_included
+			if ( g_bHasTrustFactor && !g_bIsClientTrusted[ nAttacker ] && sv_mc_trustfactor_enable.BoolValue )
+			{
+				CPrintToChat( nAttacker, "%t", "MC_CannotBuild_NotTrusted" );
+				EmitSoundToClient( nAttacker, "common/wpn_denyselect.wav" );
+				return Plugin_Handled;
+			}
+		#endif // defined _trustfactor_included
 
 			bool bIsBlockProtected = g_WorldBlocks.Get( nBlockArrayIdx, WorldBlock_t::bProtected );
 			if ( bIsBlockProtected && !GetAdminFlag( GetUserAdmin( nAttacker ), Admin_Ban ) )

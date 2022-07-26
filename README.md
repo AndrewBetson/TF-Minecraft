@@ -28,6 +28,8 @@ This plugin exposes the following console elements:
 | `sv_mc_dynamiclimit` | Enable the use of a dynamic block limit based on the number of entities in the map and the servers `sv_lowedict_threshold` value. | 0 | None |
 | `sv_mc_dynamiclimit_bias` | Constant number to subtract from resolved dynamic limit to account for post-map-load edicts such as players. | 500 | Servers with lower maxplayer counts may want to lower this. |
 | `sv_mc_dynamiclimit_threshold` | If the resolved limit is lower than this number, disable the plugin until the next mapchange. | 50 | None |
+| `sv_mc_trustfactor_enable` | Whether or not to make use of the TrustFactor plugin by reBane/DosMike if it is detected. | 1 | Requires the TrustFactor plugin be installed. |
+| `sv_mc_trustfactor_flags` | Which trust factor flag(s) to use. | "t" | See the TrustFactor documentation for a list of flags and their effects. |
 | `sm_mc_build`/`sm_build` | Builds a block under the calling players crosshair. | N/A | Calling player must not be block-banned |
 | `sm_mc_break`/`sm_break` | Breaks the block under the calling players crosshair. | N/A | Calling player must not be block-banned |
 | `sm_mc_block(s)`/`sm_block(s)` | Allows the calling player to select a block. | N/A | None |
@@ -44,6 +46,8 @@ This plugin exposes the following console elements:
 
 Dependencies
 ==================
+
+- [TrustFactor](https://github.com/DosMike/SM-TrustFactor) (*optional*)
 - [morecolors](https://raw.githubusercontent.com/DoctorMcKay/sourcemod-plugins/master/scripting/include/morecolors.inc) (*compilation only*)
 
 License
