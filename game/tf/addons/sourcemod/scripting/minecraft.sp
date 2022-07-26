@@ -108,17 +108,13 @@ public void OnPluginStart()
 			}
 
 		#if defined _trustfactor_included
-			OnClientTrustFactorLoaded( i, GetClientTrustFactors( i ) );
+			if ( g_bHasTrustFactor )
+			{
+				OnClientTrustFactorLoaded( i, GetClientTrustFactors( i ) );
+			}
 		#endif // defined _trustfactor_included
 		}
 	}
-
-#if defined _trustfactor_included
-	char szBuf[ 32 ];
-	sv_mc_trustfactor_flags.GetString( szBuf, sizeof( szBuf ) );
-
-	g_hTrustCond.Parse( szBuf );
-#endif // defined _trustfactor_included
 }
 
 public void OnClientPostAdminCheck( int nClientIdx )
@@ -156,6 +152,13 @@ public void OnConfigsExecuted()
 public void OnAllPluginsLoaded()
 {
 	g_bHasTrustFactor = LibraryExists( "trustfactor" );
+	if ( g_bHasTrustFactor )
+	{
+		char szBuf[ 32 ];
+		sv_mc_trustfactor_flags.GetString( szBuf, sizeof( szBuf ) );
+
+		g_hTrustCond.Parse( szBuf );
+	}
 }
 
 public void OnLibraryAdded( const char[] szName )
@@ -170,19 +173,30 @@ public void OnLibraryRemoved( const char[] szName )
 
 public void OnClientTrustFactorLoaded( int nClientIdx, TrustFactors eFactors )
 {
-	g_bIsClientTrusted[ nClientIdx ] = g_hTrustCond.Test( nClientIdx );
+	if ( g_bHasTrustFactor )
+	{
+		g_bIsClientTrusted[ nClientIdx ] = g_hTrustCond.Test( nClientIdx );
+	}
 }
 
 public void OnClientTrustFactorChanged( int nClientIdx, TrustFactors eOldFactors, TrustFactors eNewFactors )
 {
-	// BUG(AndrewB): For some reason this callback doesn't seem to get called when it's supposed to...
-	g_bIsClientTrusted[ nClientIdx ] = g_hTrustCond.Test( nClientIdx );
+	if ( g_bHasTrustFactor )
+	{
+		// BUG(AndrewB): For some reason this callback doesn't seem to get called when it's supposed to...
+		g_bIsClientTrusted[ nClientIdx ] = g_hTrustCond.Test( nClientIdx );
+	}
 }
 
 public void ConVar_TrustFactor_Flags( ConVar hConVar, char[] szOldValue, char[] szNewValue )
 {
+	if ( !g_bHasTrustFactor )
+	{
+		return;
+	}
+
 	g_hTrustCond.Parse( szNewValue );
-	for ( int i = 0; i <= MaxClients; i++ )
+	for ( int i = 1; i <= MaxClients; i++ )
 	{
 		if ( IsClientInGame( i ) && !IsFakeClient( i ) )
 		{
