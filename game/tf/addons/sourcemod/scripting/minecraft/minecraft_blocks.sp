@@ -949,9 +949,16 @@ public Action Block_OnTakeDamage(
 			{
 				CPrintToChat( nAttacker, "%t", "MC_CannotBuild_NotTrusted" );
 				EmitSoundToClient( nAttacker, "common/wpn_denyselect.wav" );
-				return Plugin_Handled;
+				return Plugin_Continue;
 			}
 		#endif // defined _trustfactor_included
+
+			if ( g_bIsBanned[ nAttacker ] )
+			{
+				CPrintToChat( nAttacker, "%t", "MC_CannotBuild_Banned" );
+				EmitSoundToClient( nAttacker, "common/wpn_denyselect.wav" );
+				return Plugin_Continue;
+			}
 
 			bool bIsBlockProtected = g_WorldBlocks.Get( nBlockArrayIdx, WorldBlock_t::bProtected );
 			if ( bIsBlockProtected && !GetAdminFlag( GetUserAdmin( nAttacker ), Admin_Ban ) )
@@ -967,8 +974,8 @@ public Action Block_OnTakeDamage(
 			int nBlockIdx = g_WorldBlocks.Get( nBlockArrayIdx, WorldBlock_t::nBlockIdx );
 			EmitAmbientSound( g_BlockDefs[ nBlockIdx ].szBreakSound, vBlockOrigin, nVictim, SNDLEVEL_NORMAL );
 
-			AcceptEntityInput( nVictim, "Kill" );
 			SDKUnhook( nVictim, SDKHook_OnTakeDamage, Block_OnTakeDamage );
+			AcceptEntityInput( nVictim, "Kill" );
 
 			g_WorldBlocks.Erase( nBlockArrayIdx );
 		}
