@@ -131,6 +131,8 @@ public Action Cmd_MC_Ban( int nClientIdx, int nNumArgs )
 		SetClientCookie( nTargetClientIdx, g_hCookie_NumBans, szNewNumBans );
 	}
 
+	Block_ClearPlayer( nTargetClientIdx );
+
 	return Plugin_Handled;
 }
 
