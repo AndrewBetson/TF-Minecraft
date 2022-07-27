@@ -183,7 +183,11 @@ public void OnClientTrustFactorChanged( int nClientIdx, TrustFactors eOldFactors
 {
 	if ( g_bHasTrustFactor )
 	{
-		// BUG(AndrewB): For some reason this callback doesn't seem to get called when it's supposed to...
+		// NOTE(AndrewB):	As of the time of writing this comment,
+		//					the TrustFactor plugin does not broadcast
+		//					this forward when a players servertime updates.
+		//					I am leaving this here in the event that the
+		//					TrustFactor plugin is updated to do so.
 		g_bIsClientTrusted[ nClientIdx ] = g_hTrustCond.Test( nClientIdx );
 	}
 }
