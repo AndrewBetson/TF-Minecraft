@@ -398,10 +398,11 @@ public Action Cmd_MC_Build( int nClientIdx, int nNumArgs )
 
 		CRemoveTags( szClientName, sizeof( szClientName ) );
 
-		char szClientAuthString[ 32 ];
+		char szClientAuthString[ MAX_AUTHID_LENGTH ];
 		GetClientAuthId( nClientIdx, AuthId_Steam2, szClientAuthString, sizeof( szClientAuthString ) );
 
-		char szBlockTargetName[ 160 ];
+		// The extra 4 bytes are for the space, parentheses and null terminator.
+		char szBlockTargetName[ MAX_NAME_LENGTH + MAX_AUTHID_LENGTH + 4 ];
 		Format( szBlockTargetName, sizeof( szBlockTargetName ), "%s (%s)", szClientName, szClientAuthString );
 
 		DispatchKeyValue( nEnt, "targetname", szBlockTargetName );
