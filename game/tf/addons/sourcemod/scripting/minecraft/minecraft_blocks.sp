@@ -655,6 +655,7 @@ public void Block_TryBreak( int nClientIdx )
 	if ( !IsPlayerAlive( nClientIdx ) && !bIsClientAdmin )
 	{
 		CPrintToChat( nClientIdx, "%t", "MC_MustBeAlive" );
+		EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
 		return;
 	}
 
