@@ -281,9 +281,12 @@ public Action Cmd_MC_Build( int nClientIdx, int nNumArgs )
 
 	if ( !IsPlayerAlive( nClientIdx ) )
 	{
-		CPrintToChat( nClientIdx, "%t", "MC_MustBeAlive" );
-		EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
-		return Plugin_Handled;
+		if ( !bIsClientAdmin || TF2_GetClientTeam( nClientIdx ) != TFTeam_Spectator )
+		{
+			CPrintToChat( nClientIdx, "%t", "MC_MustBeAlive" );
+			EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
+			return Plugin_Handled;
+		}
 	}
 
 #if defined _trustfactor_included
@@ -482,10 +485,7 @@ public Action Cmd_MC_Break( int nClientIdx, int nNumArgs )
 		return Plugin_Handled;
 	}
 
-	if ( IsPlayerAlive( nClientIdx ) )
-	{
-		Block_TryBreak( nClientIdx );
-	}
+	Block_TryBreak( nClientIdx );
 
 	return Plugin_Handled;
 }
@@ -651,6 +651,13 @@ public Action Cmd_MC_Protect( int nClientIdx, int nNumArgs )
 
 public void Block_TryBreak( int nClientIdx )
 {
+	bool bIsClientAdmin = GetUserAdmin( nClientIdx ).HasFlag( Admin_Ban );
+	if ( !IsPlayerAlive( nClientIdx ) && !bIsClientAdmin )
+	{
+		CPrintToChat( nClientIdx, "%t", "MC_MustBeAlive" );
+		return;
+	}
+
 	int nTarget = GetClientAimTarget( nClientIdx, false );
 	if ( IsValidBlock( nTarget ) )
 	{
@@ -661,7 +668,7 @@ public void Block_TryBreak( int nClientIdx )
 		}
 
 		bool bIsBlockProtected = g_WorldBlocks.Get( nBlockArrayIdx, WorldBlock_t::bProtected );
-		if ( bIsBlockProtected && !GetAdminFlag( GetUserAdmin( nClientIdx ), Admin_Ban ) )
+		if ( bIsBlockProtected && !bIsClientAdmin )
 		{
 			CPrintToChat( nClientIdx, "%t", "MC_BlockProtected" );
 			EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
