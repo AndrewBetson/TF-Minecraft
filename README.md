@@ -15,6 +15,7 @@ New Features
 - A rudimentary, clientpref-based ban system has been implemented.
 - Staff can now mark blocks as "protected", making them unbreakable to any non-staff players.
 - Texture sizes have been reduced across the board from 512x256 to 16x16 or 64x32, depending on the block type.
+- Optional integration with [TrustFactor](https://github.com/DosMike/SM-TrustFactor) by reBane/DosMike.
 
 Console Elements
 ==================
@@ -57,6 +58,8 @@ The Minecraft content included in this repo is released under the terms of the "
 
 TODO
 ==================
+- Add more block types.
+- Add a build mode.
 - Add natives for other plugins to interface with.
 - Look into `TR_GetPlaneNormal` for more robust block-on-block building.
 - Document the arduous process of adding a new block type.

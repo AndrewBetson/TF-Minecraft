@@ -43,7 +43,7 @@ public Plugin myinfo =
 	name		= "[TF2] Minecraft",
 	description	= "Minecraft, but in TF2.",
 	author		= "Moonly Days; overhauled by Andrew \"andrewb\" Betson",
-	version		= "2.3.0",
+	version		= "2.4.0",
 	url			= "https://www.github.com/AndrewBetson/TF-Minecraft/"
 };
 
