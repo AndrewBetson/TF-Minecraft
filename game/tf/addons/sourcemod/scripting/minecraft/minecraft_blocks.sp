@@ -279,6 +279,15 @@ public Action Cmd_MC_Build( int nClientIdx, int nNumArgs )
 		}
 	}
 
+#if defined _trustfactor_included
+	if ( g_bHasTrustFactor && !g_bIsClientTrusted[ nClientIdx ] && sv_mc_trustfactor_enable.BoolValue )
+	{
+		CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_NotTrusted" );
+		EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
+		return Plugin_Handled;
+	}
+#endif // defined _trustfactor_included
+
 	if ( !IsPlayerAlive( nClientIdx ) )
 	{
 		if ( !bIsClientAdmin || TF2_GetClientTeam( nClientIdx ) != TFTeam_Spectator )
@@ -288,15 +297,6 @@ public Action Cmd_MC_Build( int nClientIdx, int nNumArgs )
 			return Plugin_Handled;
 		}
 	}
-
-#if defined _trustfactor_included
-	if ( g_bHasTrustFactor && !g_bIsClientTrusted[ nClientIdx ] && sv_mc_trustfactor_enable.BoolValue )
-	{
-		CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_NotTrusted" );
-		EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
-		return Plugin_Handled;
-	}
-#endif // defined _trustfactor_included
 
 	if ( g_bIsBanned[ nClientIdx ] )
 	{
