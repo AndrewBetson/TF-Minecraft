@@ -30,6 +30,7 @@
 #include <tf2_stocks>
 
 #include <morecolors>
+#include <tf2hudmsg>
 
 #undef REQUIRE_PLUGIN
 #tryinclude <trustfactor>
@@ -61,6 +62,7 @@ bool			g_bIsClientTrusted[ MAXPLAYERS + 1 ];
 
 #include "minecraft/minecraft_bans.sp"
 #include "minecraft/minecraft_blocks.sp"
+#include "minecraft/minecraft_buildmode.sp"
 
 public void OnPluginStart()
 {
@@ -70,6 +72,7 @@ public void OnPluginStart()
 
 	OnPluginStart_Bans();
 	OnPluginStart_Blocks();
+	OnPluginStart_BuildMode();
 
 #if defined _trustfactor_included
 	sv_mc_trustfactor_enable = CreateConVar(
@@ -125,6 +128,7 @@ public void OnClientPostAdminCheck( int nClientIdx )
 public void OnClientCookiesCached( int nClientIdx )
 {
 	OnClientCookiesCached_Bans( nClientIdx );
+	OnClientCookiesCached_BuildMode( nClientIdx );
 }
 
 public void OnClientDisconnect( int nClientIdx )
@@ -135,6 +139,7 @@ public void OnClientDisconnect( int nClientIdx )
 
 	OnClientDisconnect_Bans( nClientIdx );
 	OnClientDisconnect_Blocks( nClientIdx );
+	OnClientDisconnect_BuildMode( nClientIdx );
 }
 
 public void OnMapStart()

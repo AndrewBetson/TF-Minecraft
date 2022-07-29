@@ -257,234 +257,13 @@ public void Event_TeamplayRoundStart( Event hEvent, const char[] szName, bool bD
 
 public Action Cmd_MC_Build( int nClientIdx, int nNumArgs )
 {
-	if( !( 0 < nClientIdx <= MaxClients ) )
-	{
-		return Plugin_Handled;
-	}
-
-	if ( !IsClientInGame( nClientIdx ) )
-	{
-		return Plugin_Handled;
-	}
-
-	bool bIsClientAdmin = GetUserAdmin( nClientIdx ).HasFlag( Admin_Ban );
-	if ( g_bPluginDisabled )
-	{
-		// For some reason &&'ing this with g_bPluginDisabled doesn't work?
-		if ( !bIsClientAdmin )
-		{
-			CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_Disabled" );
-			EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
-			return Plugin_Handled;
-		}
-	}
-
-#if defined _trustfactor_included
-	if ( g_bHasTrustFactor && !g_bIsClientTrusted[ nClientIdx ] && sv_mc_trustfactor_enable.BoolValue )
-	{
-		CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_NotTrusted" );
-		EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
-		return Plugin_Handled;
-	}
-#endif // defined _trustfactor_included
-
-	if ( !IsPlayerAlive( nClientIdx ) )
-	{
-		if ( !bIsClientAdmin || TF2_GetClientTeam( nClientIdx ) != TFTeam_Spectator )
-		{
-			CPrintToChat( nClientIdx, "%t", "MC_MustBeAlive" );
-			EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
-			return Plugin_Handled;
-		}
-	}
-
-	if ( g_bIsBanned[ nClientIdx ] )
-	{
-		CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_Banned" );
-		EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
-		return Plugin_Handled;
-	}
-
-	// Clamp selected block to valid range.
-	if ( g_nSelectedBlock[ nClientIdx ] < 1 )	g_nSelectedBlock[ nClientIdx ] = 1;
-	if ( g_nSelectedBlock[ nClientIdx ] > 128 )	g_nSelectedBlock[ nClientIdx ] = 128;
-
-	if ( g_WorldBlocks.Length >= g_nBlockLimit )
-	{
-		CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_TooManyBlocks", g_nBlockLimit );
-		return Plugin_Handled;
-	}
-
-	int nSelected = g_nSelectedBlock[ nClientIdx ];
-
-	if( g_BlockDefs[ nSelected ].nLimit != -1 )
-	{
-		if ( Block_GetNumberOfTypeInWorld( nSelected ) >= g_BlockDefs[ nSelected ].nLimit )
-		{
-			CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_TooManyOfType", g_BlockDefs[ nSelected ].nLimit );
-			return Plugin_Handled;
-		}
-	}
-
-	// Try to find a valid location to build the block at.
-
-	float vClientEyeOrigin[ 3 ];
-	float vClientEyeAngles[ 3 ];
-	float vHitPoint[ 3 ];
-	GetClientEyePosition( nClientIdx, vClientEyeOrigin );
-	GetClientEyeAngles( nClientIdx, vClientEyeAngles );
-
-	TR_TraceRayFilter( vClientEyeOrigin, vClientEyeAngles, MASK_SOLID, RayType_Infinite, TraceEntityFilter_NotPlayer );
-
-	if ( TR_DidHit( INVALID_HANDLE ) )
-	{
-		TR_GetEndPosition( vHitPoint, INVALID_HANDLE );
-	}
-
-	// Snap the blocks location to a 50x50x50 grid.
-
-	vHitPoint[ 0 ] = RoundToNearest( vHitPoint[ 0 ] / 50.0 ) * 50.0;
-	vHitPoint[ 1 ] = RoundToNearest( vHitPoint[ 1 ] / 50.0 ) * 50.0;
-	vHitPoint[ 2 ] = RoundToNearest( vHitPoint[ 2 ] / 50.0 ) * 50.0;
-
-	if ( GetVectorDistance( vClientEyeOrigin, vHitPoint ) > 300.0 )
-	{
-		EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
-		return Plugin_Handled;
-	}
-
-	if ( Block_IsBlockAtOrigin( vHitPoint ) )
-	{
-		// Player is likely trying to build on the bottom of another block,
-		// so just shift the z-coord down by the height of a block.
-		vHitPoint[ 2 ] -= 50.0;
-
-		// Check new end point to handle edge cases.
-		if ( Block_IsBlockAtOrigin( vHitPoint ) )
-		{
-			EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
-			return Plugin_Handled;
-		}
-	}
-
-	// Not adding an exception for staff to this one
-	// because this is a lot easier to do on accident
-	// than building too close to a teleporter.
-	if ( Block_IsPlayerNear( vHitPoint ) )
-	{
-		EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
-		return Plugin_Handled;
-	}
-
-	if ( Block_IsTeleporterNear( vHitPoint ) && !bIsClientAdmin )
-	{
-		CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_Teleporter" );
-		EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
-		return Plugin_Handled;
-	}
-
-	int nEnt = CreateEntityByName( "prop_dynamic_override" );
-	if ( IsValidEdict( nEnt ) )
-	{
-		float vBlockAngles[ 3 ];
-		if ( g_BlockDefs[ nSelected ].bOrientToPlayer )
-		{
-			vBlockAngles[ 1 ] = ( RoundToNearest( vClientEyeAngles[ 1 ] / 90.0 ) * 90.0 ) + 90.0;
-		}
-		TeleportEntity( nEnt, vHitPoint, vBlockAngles, NULL_VECTOR );
-
-		SetEntProp( nEnt, Prop_Send, "m_nSkin", g_BlockDefs[ nSelected ].nSkin );
-		SetEntProp( nEnt, Prop_Send, "m_nSolidType", 6 );
-
-		char szClientName[ MAX_NAME_LENGTH ];
-		GetClientName( nClientIdx, szClientName, sizeof( szClientName ) );
-
-		CRemoveTags( szClientName, sizeof( szClientName ) );
-
-		char szClientAuthString[ MAX_AUTHID_LENGTH ];
-		GetClientAuthId( nClientIdx, AuthId_Steam2, szClientAuthString, sizeof( szClientAuthString ) );
-
-		// The extra 4 bytes are for the space, parentheses and null terminator.
-		char szBlockTargetName[ MAX_NAME_LENGTH + MAX_AUTHID_LENGTH + 4 ];
-		Format( szBlockTargetName, sizeof( szBlockTargetName ), "%s (%s)", szClientName, szClientAuthString );
-
-		DispatchKeyValue( nEnt, "targetname", szBlockTargetName );
-
-		SetEntityModel( nEnt, g_BlockDefs[ nSelected ].szModel );
-
-		DispatchSpawn( nEnt );
-		ActivateEntity( nEnt );
-
-		WorldBlock_t NewWorldBlock;
-		NewWorldBlock.nEntityRef = EntIndexToEntRef( nEnt );
-		NewWorldBlock.nBlockIdx = nSelected;
-		NewWorldBlock.bProtected = bIsClientAdmin && sv_mc_auto_protect_staff_blocks.BoolValue ? true : false;
-		NewWorldBlock.vOrigin = vHitPoint;
-		NewWorldBlock.nBuilderClientIdx = nClientIdx;
-
-		g_WorldBlocks.PushArray( NewWorldBlock );
-
-		if( g_BlockDefs[ nSelected ].bEmitsLight )
-		{
-			int nEntLight = CreateEntityByName( "light_dynamic" );
-			if ( IsValidEdict( nEntLight ) )
-		    {
-		        DispatchKeyValue( nEntLight, "_light", "250 250 200" );
-		        DispatchKeyValue( nEntLight, "brightness", "5" );
-		        DispatchKeyValueFloat( nEntLight, "spotlight_radius", 280.0 );
-		        DispatchKeyValueFloat( nEntLight, "distance", 180.0 );
-		        DispatchKeyValue( nEntLight, "style", "0" );
-		        DispatchSpawn( nEntLight );
-		        ActivateEntity( nEntLight );
-
-		        float vLightPos[ 3 ];
-		        vLightPos[ 0 ] = vHitPoint[ 0 ];
-		        vLightPos[ 1 ] = vHitPoint[ 1 ];
-		        vLightPos[ 2 ] = vHitPoint[ 2 ] + 25.0;
-
-		        TeleportEntity( nEntLight, vLightPos, NULL_VECTOR, NULL_VECTOR );
-
-		        SetVariantString( "!activator" );
-		        AcceptEntityInput( nEntLight, "SetParent", nEnt, nEntLight );
-		        AcceptEntityInput( nEntLight, "TurnOn" );
-		    }
-		}
-
-		EmitAmbientSound( g_BlockDefs[ nSelected ].szBuildSound, vHitPoint, nEnt, SNDLEVEL_NORMAL );
-
-		SDKHook( nEnt, SDKHook_OnTakeDamage, Block_OnTakeDamage );
-	}
+	Block_TryBuild( nClientIdx );
 
 	return Plugin_Handled;
 }
 
 public Action Cmd_MC_Break( int nClientIdx, int nNumArgs )
 {
-	if ( g_bPluginDisabled )
-	{
-		if ( !GetUserAdmin( nClientIdx ).HasFlag( Admin_Ban ) )
-		{
-			CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_Disabled" );
-			return Plugin_Handled;
-		}
-	}
-
-#if defined _trustfactor_included
-	if ( g_bHasTrustFactor && !g_bIsClientTrusted[ nClientIdx ] && sv_mc_trustfactor_enable.BoolValue )
-	{
-		CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_NotTrusted" );
-		EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
-		return Plugin_Handled;
-	}
-#endif // defined _trustfactor_included
-
-	if ( g_bIsBanned[ nClientIdx ] )
-	{
-		CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_Banned" );
-		EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
-		return Plugin_Handled;
-	}
-
 	Block_TryBreak( nClientIdx );
 
 	return Plugin_Handled;
@@ -492,9 +271,6 @@ public Action Cmd_MC_Break( int nClientIdx, int nNumArgs )
 
 public Action Cmd_MC_Block( int nClientIdx, int nNumArgs )
 {
-	Menu menu = new Menu( Menu_BlockSelect, MENU_ACTIONS_ALL );
-	menu.SetTitle( "%t", "MC_BlockMenu_Title" );
-
 	if( nNumArgs >= 1 )
 	{
 		char szIndex[ 4 ];
@@ -503,52 +279,15 @@ public Action Cmd_MC_Block( int nClientIdx, int nNumArgs )
 	}
 	else
 	{
-		for ( int i = 0; i < MAXBLOCKINDICES; i++ )
-		{
-			if ( g_BlockDefs[ i ].nIndex <= 0 || g_BlockDefs[ i ].bHidden )
-			{
-				continue;
-			}
-			char szIndex[ 4 ];
-			IntToString( i, szIndex, sizeof( szIndex ) );
-			menu.AddItem( szIndex, g_BlockDefs[ i ].szPhrase );
-		}
+		Block_TryBlockMenu( nClientIdx );
 	}
-
-	menu.ExitButton = true;
-	menu.Display( nClientIdx, 32 );
 
 	return Plugin_Handled;
 }
 
 public Action Cmd_MC_Pick( int nClientIdx, int nNumArgs )
 {
-	int nTarget = GetClientAimTarget( nClientIdx, false );
-	if ( IsValidBlock( nTarget ) )
-	{
-		int nBlockArrayIdx = g_WorldBlocks.FindValue( EntIndexToEntRef( nTarget ), WorldBlock_t::nEntityRef );
-		if ( nBlockArrayIdx == -1 )
-		{
-			return Plugin_Handled;
-		}
-
-		float vClientPos[ 3 ];
-		GetEntPropVector( nClientIdx, Prop_Send, "m_vecOrigin", vClientPos );
-
-		float vTargetPos[ 3 ];
-		GetEntPropVector( nTarget, Prop_Send, "m_vecOrigin", vTargetPos );
-
-		if ( GetVectorDistance( vClientPos, vTargetPos ) > 300 )
-		{
-			EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
-			return Plugin_Handled;
-		}
-
-		int nBlockIdx = g_WorldBlocks.Get( nBlockArrayIdx, WorldBlock_t::nBlockIdx );
-		g_nSelectedBlock[ nClientIdx ] = nBlockIdx;
-
-		CPrintToChat( nClientIdx, "%t", "MC_SelectedBlock", g_BlockDefs[ nBlockIdx ].szPhrase );
-	}
+	Block_TryPick( nClientIdx );
 
 	return Plugin_Handled;
 }
@@ -649,8 +388,234 @@ public Action Cmd_MC_Protect( int nClientIdx, int nNumArgs )
 	return Plugin_Handled;
 }
 
+public void Block_TryBuild( int nClientIdx )
+{
+	if( !( 0 < nClientIdx <= MaxClients ) )
+	{
+		return;
+	}
+
+	if ( !IsClientInGame( nClientIdx ) )
+	{
+		return;
+	}
+
+	bool bIsClientAdmin = GetUserAdmin( nClientIdx ).HasFlag( Admin_Ban );
+	if ( g_bPluginDisabled )
+	{
+		// For some reason &&'ing this with g_bPluginDisabled doesn't work?
+		if ( !bIsClientAdmin )
+		{
+			CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_Disabled" );
+			EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
+			return;
+		}
+	}
+
+#if defined _trustfactor_included
+	if ( g_bHasTrustFactor && !g_bIsClientTrusted[ nClientIdx ] && sv_mc_trustfactor_enable.BoolValue )
+	{
+		CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_NotTrusted" );
+		EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
+		return;
+	}
+#endif // defined _trustfactor_included
+
+	if ( !IsPlayerAlive( nClientIdx ) )
+	{
+		if ( !bIsClientAdmin || TF2_GetClientTeam( nClientIdx ) != TFTeam_Spectator )
+		{
+			CPrintToChat( nClientIdx, "%t", "MC_MustBeAlive" );
+			EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
+			return;
+		}
+	}
+
+	if ( g_bIsBanned[ nClientIdx ] )
+	{
+		CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_Banned" );
+		EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
+		return;
+	}
+
+	// Clamp selected block to valid range.
+	if ( g_nSelectedBlock[ nClientIdx ] < 1 )	g_nSelectedBlock[ nClientIdx ] = 1;
+	if ( g_nSelectedBlock[ nClientIdx ] > 128 )	g_nSelectedBlock[ nClientIdx ] = 128;
+
+	if ( g_WorldBlocks.Length >= g_nBlockLimit )
+	{
+		CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_TooManyBlocks", g_nBlockLimit );
+		return;
+	}
+
+	int nSelected = g_nSelectedBlock[ nClientIdx ];
+
+	if( g_BlockDefs[ nSelected ].nLimit != -1 )
+	{
+		if ( Block_GetNumberOfTypeInWorld( nSelected ) >= g_BlockDefs[ nSelected ].nLimit )
+		{
+			CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_TooManyOfType", g_BlockDefs[ nSelected ].nLimit );
+			return;
+		}
+	}
+
+	// Try to find a valid location to build the block at.
+
+	float vClientEyeOrigin[ 3 ];
+	float vClientEyeAngles[ 3 ];
+	float vHitPoint[ 3 ];
+	GetClientEyePosition( nClientIdx, vClientEyeOrigin );
+	GetClientEyeAngles( nClientIdx, vClientEyeAngles );
+
+	TR_TraceRayFilter( vClientEyeOrigin, vClientEyeAngles, MASK_SOLID, RayType_Infinite, TraceEntityFilter_NotPlayer );
+
+	if ( TR_DidHit( INVALID_HANDLE ) )
+	{
+		TR_GetEndPosition( vHitPoint, INVALID_HANDLE );
+	}
+
+	// Snap the blocks location to a 50x50x50 grid.
+
+	vHitPoint[ 0 ] = RoundToNearest( vHitPoint[ 0 ] / 50.0 ) * 50.0;
+	vHitPoint[ 1 ] = RoundToNearest( vHitPoint[ 1 ] / 50.0 ) * 50.0;
+	vHitPoint[ 2 ] = RoundToNearest( vHitPoint[ 2 ] / 50.0 ) * 50.0;
+
+	if ( GetVectorDistance( vClientEyeOrigin, vHitPoint ) > 300.0 )
+	{
+		EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
+		return;
+	}
+
+	if ( Block_IsBlockAtOrigin( vHitPoint ) )
+	{
+		// Player is likely trying to build on the bottom of another block,
+		// so just shift the z-coord down by the height of a block.
+		vHitPoint[ 2 ] -= 50.0;
+
+		// Check new end point to handle edge cases.
+		if ( Block_IsBlockAtOrigin( vHitPoint ) )
+		{
+			EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
+			return;
+		}
+	}
+
+	// Not adding an exception for staff to this one
+	// because this is a lot easier to do on accident
+	// than building too close to a teleporter.
+	if ( Block_IsPlayerNear( vHitPoint ) )
+	{
+		EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
+		return;
+	}
+
+	if ( Block_IsTeleporterNear( vHitPoint ) && !bIsClientAdmin )
+	{
+		CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_Teleporter" );
+		EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
+		return;
+	}
+
+	int nEnt = CreateEntityByName( "prop_dynamic_override" );
+	if ( IsValidEdict( nEnt ) )
+	{
+		float vBlockAngles[ 3 ];
+		if ( g_BlockDefs[ nSelected ].bOrientToPlayer )
+		{
+			vBlockAngles[ 1 ] = ( RoundToNearest( vClientEyeAngles[ 1 ] / 90.0 ) * 90.0 ) + 90.0;
+		}
+		TeleportEntity( nEnt, vHitPoint, vBlockAngles, NULL_VECTOR );
+
+		SetEntProp( nEnt, Prop_Send, "m_nSkin", g_BlockDefs[ nSelected ].nSkin );
+		SetEntProp( nEnt, Prop_Send, "m_nSolidType", 6 );
+
+		char szClientName[ MAX_NAME_LENGTH ];
+		GetClientName( nClientIdx, szClientName, sizeof( szClientName ) );
+
+		CRemoveTags( szClientName, sizeof( szClientName ) );
+
+		char szClientAuthString[ MAX_AUTHID_LENGTH ];
+		GetClientAuthId( nClientIdx, AuthId_Steam2, szClientAuthString, sizeof( szClientAuthString ) );
+
+		// The extra 4 bytes are for the space, parentheses and null terminator.
+		char szBlockTargetName[ MAX_NAME_LENGTH + MAX_AUTHID_LENGTH + 4 ];
+		Format( szBlockTargetName, sizeof( szBlockTargetName ), "%s (%s)", szClientName, szClientAuthString );
+
+		DispatchKeyValue( nEnt, "targetname", szBlockTargetName );
+
+		SetEntityModel( nEnt, g_BlockDefs[ nSelected ].szModel );
+
+		DispatchSpawn( nEnt );
+		ActivateEntity( nEnt );
+
+		WorldBlock_t NewWorldBlock;
+		NewWorldBlock.nEntityRef = EntIndexToEntRef( nEnt );
+		NewWorldBlock.nBlockIdx = nSelected;
+		NewWorldBlock.bProtected = bIsClientAdmin && sv_mc_auto_protect_staff_blocks.BoolValue ? true : false;
+		NewWorldBlock.vOrigin = vHitPoint;
+		NewWorldBlock.nBuilderClientIdx = nClientIdx;
+
+		g_WorldBlocks.PushArray( NewWorldBlock );
+
+		if( g_BlockDefs[ nSelected ].bEmitsLight )
+		{
+			int nEntLight = CreateEntityByName( "light_dynamic" );
+			if ( IsValidEdict( nEntLight ) )
+		    {
+		        DispatchKeyValue( nEntLight, "_light", "250 250 200" );
+		        DispatchKeyValue( nEntLight, "brightness", "5" );
+		        DispatchKeyValueFloat( nEntLight, "spotlight_radius", 280.0 );
+		        DispatchKeyValueFloat( nEntLight, "distance", 180.0 );
+		        DispatchKeyValue( nEntLight, "style", "0" );
+		        DispatchSpawn( nEntLight );
+		        ActivateEntity( nEntLight );
+
+		        float vLightPos[ 3 ];
+		        vLightPos[ 0 ] = vHitPoint[ 0 ];
+		        vLightPos[ 1 ] = vHitPoint[ 1 ];
+		        vLightPos[ 2 ] = vHitPoint[ 2 ] + 25.0;
+
+		        TeleportEntity( nEntLight, vLightPos, NULL_VECTOR, NULL_VECTOR );
+
+		        SetVariantString( "!activator" );
+		        AcceptEntityInput( nEntLight, "SetParent", nEnt, nEntLight );
+		        AcceptEntityInput( nEntLight, "TurnOn" );
+		    }
+		}
+
+		EmitAmbientSound( g_BlockDefs[ nSelected ].szBuildSound, vHitPoint, nEnt, SNDLEVEL_NORMAL );
+
+		SDKHook( nEnt, SDKHook_OnTakeDamage, Block_OnTakeDamage );
+	}
+}
+
 public void Block_TryBreak( int nClientIdx )
 {
+	if ( g_bPluginDisabled )
+	{
+		if ( !GetUserAdmin( nClientIdx ).HasFlag( Admin_Ban ) )
+		{
+			CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_Disabled" );
+			return;
+		}
+	}
+
+#if defined _trustfactor_included
+	if ( g_bHasTrustFactor && !g_bIsClientTrusted[ nClientIdx ] && sv_mc_trustfactor_enable.BoolValue )
+	{
+		CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_NotTrusted" );
+		EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
+		return;
+	}
+#endif // defined _trustfactor_included
+
+	if ( g_bIsBanned[ nClientIdx ] )
+	{
+		CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_Banned" );
+		EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
+		return;
+	}
+
 	bool bIsClientAdmin = GetUserAdmin( nClientIdx ).HasFlag( Admin_Ban );
 	if ( !IsPlayerAlive( nClientIdx ) && !bIsClientAdmin )
 	{
@@ -696,6 +661,58 @@ public void Block_TryBreak( int nClientIdx )
 
 		g_WorldBlocks.Erase( nBlockArrayIdx );
 	}
+}
+
+public void Block_TryPick( int nClientIdx )
+{
+	int nTarget = GetClientAimTarget( nClientIdx, false );
+	if ( !IsValidBlock( nTarget ) )
+	{
+		return;
+	}
+
+	int nBlockArrayIdx = g_WorldBlocks.FindValue( EntIndexToEntRef( nTarget ), WorldBlock_t::nEntityRef );
+	if ( nBlockArrayIdx == -1 )
+	{
+		return;
+	}
+
+	float vClientPos[ 3 ];
+	GetEntPropVector( nClientIdx, Prop_Send, "m_vecOrigin", vClientPos );
+
+	float vTargetPos[ 3 ];
+	GetEntPropVector( nTarget, Prop_Send, "m_vecOrigin", vTargetPos );
+
+	if ( GetVectorDistance( vClientPos, vTargetPos ) > 300 )
+	{
+		EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
+		return;
+	}
+
+	int nBlockIdx = g_WorldBlocks.Get( nBlockArrayIdx, WorldBlock_t::nBlockIdx );
+	g_nSelectedBlock[ nClientIdx ] = nBlockIdx;
+
+	CPrintToChat( nClientIdx, "%t", "MC_SelectedBlock", g_BlockDefs[ nBlockIdx ].szPhrase );
+}
+
+public void Block_TryBlockMenu( int nClientIdx )
+{
+	Menu menu = new Menu( Menu_BlockSelect, MENU_ACTIONS_ALL );
+	menu.SetTitle( "%t", "MC_BlockMenu_Title" );
+
+	for ( int i = 0; i < MAXBLOCKINDICES; i++ )
+	{
+		if ( g_BlockDefs[ i ].nIndex <= 0 || g_BlockDefs[ i ].bHidden )
+		{
+			continue;
+		}
+		char szIndex[ 4 ];
+		IntToString( i, szIndex, sizeof( szIndex ) );
+		menu.AddItem( szIndex, g_BlockDefs[ i ].szPhrase );
+	}
+
+	menu.ExitButton = true;
+	menu.Display( nClientIdx, 32 );
 }
 
 public void Block_ClearAll()

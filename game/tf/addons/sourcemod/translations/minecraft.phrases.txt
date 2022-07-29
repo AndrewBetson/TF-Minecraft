@@ -37,6 +37,36 @@
 		"en"	"{green}[Minecraft]{default} You are not currently block-banned."
 	}
 
+	"MC_BuildMode_Activated"
+	{
+		"en"	"Build Mode Activated"
+	}
+
+	"MC_BuildMode_Deactivated"
+	{
+		"en"	"Build Mode Deactivated"
+	}
+
+	"MC_BuildMode_Tutorial_Break"
+	{
+		"en"	"Use [Primary Attack] To Break Blocks"
+	}
+
+	"MC_BuildMode_Tutorial_Build"
+	{
+		"en"	"Use [Secondary Attack] To Build Blocks"
+	}
+
+	"MC_BuildMode_Tutorial_Pick"
+	{
+		"en"	"Use [Special Attack] To Select The Block Under Your Crosshair"
+	}
+
+	"MC_BuildMode_Tutorial_Menu"
+	{
+		"en"	"Use [Reload] To Bring Up The Block Menu"
+	}
+
 	// Admin commands.
 
 	"MC_ClearedAll"
