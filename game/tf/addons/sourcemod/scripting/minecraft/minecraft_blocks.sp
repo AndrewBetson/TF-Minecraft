@@ -23,70 +23,6 @@
 
 #define MAXBLOCKINDICES 129
 
-/** @brief A block as defined in minecraft_blocks.cfg */
-enum struct BlockDef_t
-{
-	/** @brief Index of this block in the block menu. */
-	int		nIndex;
-
-	/**
-	 * @brief Translation phrase for the name of this block.
-	 *
-	 * @note See minecraft_blocks.phrases.txt
-	 */
-	char	szPhrase[ 32 ];
-
-	/** @brief Model used for this block. */
-	char	szModel[ 32 ];
-
-	/**
-	 * @brief Material used for this block.
-	 *
-	 * @note Relative to materials/models/minecraft/
-	 */
-	char	szMaterial[ 32 ];
-
-	/** @brief Sound to play when a player builds this block. */
-	char	szBuildSound[ 64 ];
-
-	/** @brief Sound to play when a player breaks this block. */
-	char	szBreakSound[ 64 ];
-
-	/** @brief Skin index to use for this block. */
-	int		nSkin;
-
-	/**
-	 * @brief Maximum number of blocks of this type that can exist at a time.
-	 *
-	 * @note Setting this to -1 or not defining it = no limit.
-	 */
-	int		nLimit;
-
-	/** @brief Rotate this block to face the player. (furnace, chest, Steve head, etc.) */
-	bool	bOrientToPlayer;
-
-	/** @brief Spawn a light_dynamic entity in the center of this block. */
-	bool	bEmitsLight;
-
-	/** @brief Don't display this block in the block select menu. */
-	bool	bHidden;
-}
-
-/** @brief A block as it exists in the world. */
-enum struct WorldBlock_t
-{
-	int		nEntityRef;
-	int		nBlockIdx;
-	bool	bProtected;
-	float	vOrigin[ 3 ];
-	int		nBuilderClientIdx;
-
-	bool IsAtOrigin( float vInOrigin[ 3 ] )
-	{
-		return GetVectorDistance( this.vOrigin, vInOrigin ) <= 0.1;
-	}
-}
-
 BlockDef_t	g_BlockDefs[ MAXBLOCKINDICES ];
 ArrayList	g_WorldBlocks;
 int			g_nSelectedBlock[ MAXPLAYERS + 1 ] = { 1, ... };
@@ -516,77 +452,92 @@ public void Block_TryBuild( int nClientIdx )
 		return;
 	}
 
-	int nEnt = CreateEntityByName( "prop_dynamic_override" );
-	if ( IsValidEdict( nEnt ) )
+	Action eForwardRes;
+	Call_StartForward( g_fwdOnClientBuild );
 	{
-		float vBlockAngles[ 3 ];
-		if ( g_BlockDefs[ nSelected ].bOrientToPlayer )
-		{
-			vBlockAngles[ 1 ] = ( RoundToNearest( vClientEyeAngles[ 1 ] / 90.0 ) * 90.0 ) + 90.0;
-		}
-		TeleportEntity( nEnt, vHitPoint, vBlockAngles, NULL_VECTOR );
-
-		SetEntProp( nEnt, Prop_Send, "m_nSkin", g_BlockDefs[ nSelected ].nSkin );
-		SetEntProp( nEnt, Prop_Send, "m_nSolidType", 6 );
-
-		char szClientName[ MAX_NAME_LENGTH ];
-		GetClientName( nClientIdx, szClientName, sizeof( szClientName ) );
-
-		CRemoveTags( szClientName, sizeof( szClientName ) );
-
-		char szClientAuthString[ MAX_AUTHID_LENGTH ];
-		GetClientAuthId( nClientIdx, AuthId_Steam2, szClientAuthString, sizeof( szClientAuthString ) );
-
-		// The extra 4 bytes are for the space, parentheses and null terminator.
-		char szBlockTargetName[ MAX_NAME_LENGTH + MAX_AUTHID_LENGTH + 4 ];
-		Format( szBlockTargetName, sizeof( szBlockTargetName ), "%s (%s)", szClientName, szClientAuthString );
-
-		DispatchKeyValue( nEnt, "targetname", szBlockTargetName );
-
-		SetEntityModel( nEnt, g_BlockDefs[ nSelected ].szModel );
-
-		DispatchSpawn( nEnt );
-		ActivateEntity( nEnt );
-
-		WorldBlock_t NewWorldBlock;
-		NewWorldBlock.nEntityRef = EntIndexToEntRef( nEnt );
-		NewWorldBlock.nBlockIdx = nSelected;
-		NewWorldBlock.bProtected = bIsClientAdmin && sv_mc_auto_protect_staff_blocks.BoolValue ? true : false;
-		NewWorldBlock.vOrigin = vHitPoint;
-		NewWorldBlock.nBuilderClientIdx = nClientIdx;
-
-		g_WorldBlocks.PushArray( NewWorldBlock );
-
-		if( g_BlockDefs[ nSelected ].bEmitsLight )
-		{
-			int nEntLight = CreateEntityByName( "light_dynamic" );
-			if ( IsValidEdict( nEntLight ) )
-		    {
-		        DispatchKeyValue( nEntLight, "_light", "250 250 200" );
-		        DispatchKeyValue( nEntLight, "brightness", "5" );
-		        DispatchKeyValueFloat( nEntLight, "spotlight_radius", 280.0 );
-		        DispatchKeyValueFloat( nEntLight, "distance", 180.0 );
-		        DispatchKeyValue( nEntLight, "style", "0" );
-		        DispatchSpawn( nEntLight );
-		        ActivateEntity( nEntLight );
-
-		        float vLightPos[ 3 ];
-		        vLightPos[ 0 ] = vHitPoint[ 0 ];
-		        vLightPos[ 1 ] = vHitPoint[ 1 ];
-		        vLightPos[ 2 ] = vHitPoint[ 2 ] + 25.0;
-
-		        TeleportEntity( nEntLight, vLightPos, NULL_VECTOR, NULL_VECTOR );
-
-		        SetVariantString( "!activator" );
-		        AcceptEntityInput( nEntLight, "SetParent", nEnt, nEntLight );
-		        AcceptEntityInput( nEntLight, "TurnOn" );
-		    }
-		}
-
-		EmitAmbientSound( g_BlockDefs[ nSelected ].szBuildSound, vHitPoint, nEnt, SNDLEVEL_NORMAL );
-
-		SDKHook( nEnt, SDKHook_OnTakeDamage, Block_OnTakeDamage );
+		Call_PushCell( nClientIdx );
+		Call_PushCell( nSelected );
 	}
+	Call_Finish( eForwardRes );
+
+	if ( eForwardRes == Plugin_Handled || eForwardRes == Plugin_Stop )
+	{
+		return;
+	}
+
+	int nEnt = CreateEntityByName( "prop_dynamic_override" );
+	if ( !IsValidEdict( nEnt ) )
+	{
+		return;
+	}
+
+	float vBlockAngles[ 3 ];
+	if ( g_BlockDefs[ nSelected ].bOrientToPlayer )
+	{
+		vBlockAngles[ 1 ] = ( RoundToNearest( vClientEyeAngles[ 1 ] / 90.0 ) * 90.0 ) + 90.0;
+	}
+	TeleportEntity( nEnt, vHitPoint, vBlockAngles, NULL_VECTOR );
+
+	SetEntProp( nEnt, Prop_Send, "m_nSkin", g_BlockDefs[ nSelected ].nSkin );
+	SetEntProp( nEnt, Prop_Send, "m_nSolidType", 6 );
+
+	char szClientName[ MAX_NAME_LENGTH ];
+	GetClientName( nClientIdx, szClientName, sizeof( szClientName ) );
+
+	CRemoveTags( szClientName, sizeof( szClientName ) );
+
+	char szClientAuthString[ MAX_AUTHID_LENGTH ];
+	GetClientAuthId( nClientIdx, AuthId_Steam2, szClientAuthString, sizeof( szClientAuthString ) );
+
+	// The extra 4 bytes are for the space, parentheses and null terminator.
+	char szBlockTargetName[ MAX_NAME_LENGTH + MAX_AUTHID_LENGTH + 4 ];
+	Format( szBlockTargetName, sizeof( szBlockTargetName ), "%s (%s)", szClientName, szClientAuthString );
+
+	DispatchKeyValue( nEnt, "targetname", szBlockTargetName );
+
+	SetEntityModel( nEnt, g_BlockDefs[ nSelected ].szModel );
+
+	DispatchSpawn( nEnt );
+	ActivateEntity( nEnt );
+
+	WorldBlock_t NewWorldBlock;
+	NewWorldBlock.nEntityRef = EntIndexToEntRef( nEnt );
+	NewWorldBlock.nBlockIdx = nSelected;
+	NewWorldBlock.bProtected = bIsClientAdmin && sv_mc_auto_protect_staff_blocks.BoolValue ? true : false;
+	NewWorldBlock.vOrigin = vHitPoint;
+	NewWorldBlock.nBuilderClientIdx = nClientIdx;
+
+	g_WorldBlocks.PushArray( NewWorldBlock );
+
+	if( g_BlockDefs[ nSelected ].bEmitsLight )
+	{
+		int nEntLight = CreateEntityByName( "light_dynamic" );
+		if ( IsValidEdict( nEntLight ) )
+		{
+			DispatchKeyValue( nEntLight, "_light", "250 250 200" );
+			DispatchKeyValue( nEntLight, "brightness", "5" );
+			DispatchKeyValueFloat( nEntLight, "spotlight_radius", 280.0 );
+			DispatchKeyValueFloat( nEntLight, "distance", 180.0 );
+			DispatchKeyValue( nEntLight, "style", "0" );
+			DispatchSpawn( nEntLight );
+			ActivateEntity( nEntLight );
+
+			float vLightPos[ 3 ];
+			vLightPos[ 0 ] = vHitPoint[ 0 ];
+			vLightPos[ 1 ] = vHitPoint[ 1 ];
+			vLightPos[ 2 ] = vHitPoint[ 2 ] + 25.0;
+
+			TeleportEntity( nEntLight, vLightPos, NULL_VECTOR, NULL_VECTOR );
+
+			SetVariantString( "!activator" );
+			AcceptEntityInput( nEntLight, "SetParent", nEnt, nEntLight );
+			AcceptEntityInput( nEntLight, "TurnOn" );
+		}
+	}
+
+	EmitAmbientSound( g_BlockDefs[ nSelected ].szBuildSound, vHitPoint, nEnt, SNDLEVEL_NORMAL );
+
+	SDKHook( nEnt, SDKHook_OnTakeDamage, Block_OnTakeDamage );
 }
 
 public void Block_TryBreak( int nClientIdx )
@@ -654,6 +605,20 @@ public void Block_TryBreak( int nClientIdx )
 		}
 
 		int nBlockIdx = g_WorldBlocks.Get( nBlockArrayIdx, WorldBlock_t::nBlockIdx );
+
+		Action eForwardRes;
+		Call_StartForward( g_fwdOnClientBreak );
+		{
+			Call_PushCell( nClientIdx );
+			Call_PushCell( nBlockArrayIdx );
+		}
+		Call_Finish( eForwardRes );
+
+		if ( eForwardRes == Plugin_Handled || eForwardRes == Plugin_Stop )
+		{
+			return;
+		}
+
 		EmitAmbientSound( g_BlockDefs[ nBlockIdx ].szBreakSound, vTargetPos, nTarget, SNDLEVEL_NORMAL );
 
 		AcceptEntityInput( nTarget, "Kill" );
@@ -994,10 +959,24 @@ public Action Block_OnTakeDamage(
 				return Plugin_Continue;
 			}
 
+			Action eForwardRes;
+			Call_StartForward( g_fwdOnClientBreak );
+			{
+				Call_PushCell( nAttacker );
+				Call_PushCell( nBlockArrayIdx );
+			}
+			Call_Finish( eForwardRes );
+
+			if ( eForwardRes == Plugin_Handled || eForwardRes == Plugin_Stop )
+			{
+				return Plugin_Continue;
+			}
+
 			float vBlockOrigin[ 3 ];
 			GetEntPropVector( nVictim, Prop_Send, "m_vecOrigin", vBlockOrigin );
 
 			int nBlockIdx = g_WorldBlocks.Get( nBlockArrayIdx, WorldBlock_t::nBlockIdx );
+
 			EmitAmbientSound( g_BlockDefs[ nBlockIdx ].szBreakSound, vBlockOrigin, nVictim, SNDLEVEL_NORMAL );
 
 			SDKUnhook( nVictim, SDKHook_OnTakeDamage, Block_OnTakeDamage );

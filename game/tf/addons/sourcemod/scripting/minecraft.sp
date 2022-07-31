@@ -29,6 +29,7 @@
 #include <tf2>
 #include <tf2_stocks>
 
+#include <minecraft>
 #include <morecolors>
 #include <tf2hudmsg>
 
@@ -60,9 +61,22 @@ bool			g_bIsClientTrusted[ MAXPLAYERS + 1 ];
 
 #endif // defined _trustfactor_included
 
+GlobalForward	g_fwdOnClientBuild;
+GlobalForward	g_fwdOnClientBreak;
+
 #include "minecraft/minecraft_bans.sp"
 #include "minecraft/minecraft_blocks.sp"
 #include "minecraft/minecraft_buildmode.sp"
+
+public APLRes AskPluginLoad2( Handle hThisPlugin, bool bLateLoad, char[] szError, int nErrorLen )
+{
+	CreateNative( "MC_GetBlockDef", MC_GetBlockDef_Impl );
+	CreateNative( "MC_GetWorldBlock", MC_GetWorldBlock_Impl );
+
+	RegPluginLibrary( "minecraft" );
+
+	return APLRes_Success;
+}
 
 public void OnPluginStart()
 {
@@ -118,6 +132,9 @@ public void OnPluginStart()
 		#endif // defined _trustfactor_included
 		}
 	}
+
+	g_fwdOnClientBuild	= CreateGlobalForward( "MC_OnClientBuildBlock", ET_Event, Param_Cell, Param_Cell );
+	g_fwdOnClientBreak	= CreateGlobalForward( "MC_OnClientBreakBlock", ET_Event, Param_Cell, Param_Cell );
 }
 
 public void OnClientPostAdminCheck( int nClientIdx )
@@ -215,3 +232,38 @@ public void ConVar_TrustFactor_Flags( ConVar hConVar, char[] szOldValue, char[] 
 }
 
 #endif // _trustfactor_included
+
+public any MC_GetBlockDef_Impl( Handle hPlugin, int nNumParams )
+{
+	int nBlockDefIdx = GetNativeCell( 1 );
+
+	int nSizeOfBlockDef = GetNativeCell( 3 );
+	if ( nSizeOfBlockDef != sizeof( BlockDef_t ) )
+	{
+		char szBuf[ 64 ];
+		GetPluginFilename( hPlugin, szBuf, sizeof( szBuf ) );
+
+		return ThrowNativeError( SP_ERROR_ARRAY_BOUNDS, "Plugin \"%s\" has incorrectly sized BlockDef_t. Expected %d but got %d.", szBuf, sizeof( WorldBlock_t ), nSizeOfBlockDef );
+	}
+
+	return SetNativeArray( 2, g_BlockDefs[ nBlockDefIdx ], nSizeOfBlockDef );
+}
+
+public any MC_GetWorldBlock_Impl( Handle hPlugin, int nNumParams )
+{
+	int nWorldBlockIdx = GetNativeCell( 1 );
+
+	int nSizeOfWorldBlock = GetNativeCell( 3 );
+	if ( nSizeOfWorldBlock != sizeof( WorldBlock_t ) )
+	{
+		char szBuf[ 64 ];
+		GetPluginFilename( hPlugin, szBuf, sizeof( szBuf ) );
+
+		return ThrowNativeError( SP_ERROR_ARRAY_BOUNDS, "Plugin \"%s\" has incorrectly sized WorldBlock_t. Expected %d but got %d.", szBuf, sizeof( WorldBlock_t ), nSizeOfWorldBlock );
+	}
+
+	WorldBlock_t hOutWorldBlock;
+	g_WorldBlocks.GetArray( nWorldBlockIdx, hOutWorldBlock );
+
+	return SetNativeArray( 2, hOutWorldBlock, nSizeOfWorldBlock );
+}
