@@ -110,11 +110,10 @@ Action Timer_BuildModeTutorial( Handle hTimer, DataPack hData )
 	{
 		case 0:	TF2_HudNotificationCustom( nClientIdx, "ico_build", -1, false, "%t", "MC_BuildMode_Tutorial_Build" );
 		case 1:	TF2_HudNotificationCustom( nClientIdx, "ico_demolish", -1, false, "%t", "MC_BuildMode_Tutorial_Break" );
-		case 2:	TF2_HudNotificationCustom( nClientIdx, "ico_notify_highfive", -1, false, "%t", "MC_BuildMode_Tutorial_Pick" );
+		case 2:	TF2_HudNotificationCustom( nClientIdx, "ico_build", -1, false, "%t", "MC_BuildMode_Tutorial_Pick" );
 		case 3:
 		{
-			// The icon isn't a perfect fit, but it's the best I could find.
-			TF2_HudNotificationCustom( nClientIdx, "hud_taunt_menu_icon", -1, false, "%t", "MC_BuildMode_Tutorial_Menu" );
+			TF2_HudNotificationCustom( nClientIdx, "ico_build", -1, false, "%t", "MC_BuildMode_Tutorial_Menu" );
 
 			SetClientCookie( nClientIdx, g_hCookie_SawBuildModeTutorial, "1" );
 			g_bClientHasSeenBuildModeTutorial[ nClientIdx ] = true;
