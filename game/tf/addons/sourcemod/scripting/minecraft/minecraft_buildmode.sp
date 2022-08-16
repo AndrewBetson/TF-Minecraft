@@ -108,8 +108,8 @@ Action Timer_BuildModeTutorial( Handle hTimer, DataPack hData )
 
 	switch( nTutorialNum )
 	{
-		case 0:	TF2_HudNotificationCustom( nClientIdx, "ico_demolish", -1, false, "%t", "MC_BuildMode_Tutorial_Break" );
-		case 1:	TF2_HudNotificationCustom( nClientIdx, "ico_build", -1, false, "%t", "MC_BuildMode_Tutorial_Build" );
+		case 0:	TF2_HudNotificationCustom( nClientIdx, "ico_build", -1, false, "%t", "MC_BuildMode_Tutorial_Build" );
+		case 1:	TF2_HudNotificationCustom( nClientIdx, "ico_demolish", -1, false, "%t", "MC_BuildMode_Tutorial_Break" );
 		case 2:	TF2_HudNotificationCustom( nClientIdx, "ico_notify_highfive", -1, false, "%t", "MC_BuildMode_Tutorial_Pick" );
 		case 3:
 		{
