@@ -1,24 +1,19 @@
 /**
- * Copyright (c) 2019 Moonly Days.
  * Copyright Andrew Betson.
+ * Copyright Moonly Days.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, and/or distribute copies of
- * the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include <sourcemod>
@@ -35,6 +30,7 @@
 
 #undef REQUIRE_PLUGIN
 #tryinclude <trustfactor>
+#tryinclude <tf2gravihands>
 #define REQUIRE_PLUGIN
 
 #pragma semicolon 1
@@ -45,7 +41,7 @@ public Plugin myinfo =
 	name		= "[TF2] Minecraft",
 	description	= "Minecraft, but in TF2.",
 	author		= "Moonly Days; overhauled by Andrew \"andrewb\" Betson",
-	version		= "2.4.0",
+	version		= "2.5.0",
 	url			= "https://www.github.com/AndrewBetson/TF-Minecraft/"
 };
 
@@ -164,11 +160,6 @@ public void OnMapStart()
 	OnMapStart_Blocks();
 }
 
-public void OnConfigsExecuted()
-{
-	OnConfigsExecuted_Blocks();
-}
-
 #if defined _trustfactor_included
 
 public void OnAllPluginsLoaded()
@@ -233,6 +224,24 @@ public void ConVar_TrustFactor_Flags( ConVar hConVar, char[] szOldValue, char[] 
 
 #endif // _trustfactor_included
 
+#if defined _tf2_gravihands
+
+public Action TF2GH_OnClientHolsterWeapon( int nClientIdx, int nWeaponID )
+{
+	// This plugin uses the same input (+attack3)
+	// for picking blocks while in buildmode
+	// that GraviHands uses for holstering with a melee
+	// weapon out, which could cause problems.
+	if ( g_bIsClientInBuildMode[ nClientIdx ] )
+	{
+		return Plugin_Handled;
+	}
+
+	return Plugin_Continue;
+}
+
+#endif // defined _tf2_gravihands
+
 public any MC_GetBlockDef_Impl( Handle hPlugin, int nNumParams )
 {
 	int nBlockDefIdx = GetNativeCell( 1 );
@@ -246,7 +255,10 @@ public any MC_GetBlockDef_Impl( Handle hPlugin, int nNumParams )
 		return ThrowNativeError( SP_ERROR_ARRAY_BOUNDS, "Plugin \"%s\" has incorrectly sized BlockDef_t. Expected %d but got %d.", szBuf, sizeof( WorldBlock_t ), nSizeOfBlockDef );
 	}
 
-	return SetNativeArray( 2, g_BlockDefs[ nBlockDefIdx ], nSizeOfBlockDef );
+	BlockDef_t hOutBlockDef;
+	g_hBlockDefs.GetArray( nBlockDefIdx, hOutBlockDef );
+
+	return SetNativeArray( 2, hOutBlockDef, nSizeOfBlockDef );
 }
 
 public any MC_GetWorldBlock_Impl( Handle hPlugin, int nNumParams )
@@ -263,7 +275,7 @@ public any MC_GetWorldBlock_Impl( Handle hPlugin, int nNumParams )
 	}
 
 	WorldBlock_t hOutWorldBlock;
-	g_WorldBlocks.GetArray( nWorldBlockIdx, hOutWorldBlock );
+	g_hWorldBlocks.GetArray( nWorldBlockIdx, hOutWorldBlock );
 
 	return SetNativeArray( 2, hOutWorldBlock, nSizeOfWorldBlock );
 }

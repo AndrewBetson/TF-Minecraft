@@ -1,0 +1,6 @@
+"VertexLitGeneric"
+{
+	"$basetexture"		"models/minecraft/grayterracotta"
+
+	"$surfaceprop"		"brick"
+}

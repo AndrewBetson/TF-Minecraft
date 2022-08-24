@@ -1,7 +1,0 @@
-"VertexLitGeneric"
-{
-	"$basetexture"		"models/minecraft/leaves"
-	"$alphatest"		"1"
-
-	"$surfaceprop"		"foliage"
-}

@@ -1,0 +1,39 @@
+"VertexLitGeneric"
+{
+	"$basetexture"		"models/minecraft/prismarine"
+	"$color2"			"[ 0.0 1.0 0.0 ]"
+
+	"$surfaceprop"		"rock"
+
+	// This will probably need a v2 at some point,
+	// hopefully with the help of someone familiar with proxies.
+	proxies
+	{
+		sine
+		{
+			sineperiod	2.0
+			sinemin		0.0
+			sinemax		0.05
+
+			resultvar	"$color2[0]"
+		}
+
+		sine
+		{
+			sineperiod	13.0
+			sinemin		0.6
+			sinemax		1.0
+
+			resultvar	"$color2[1]"
+		}
+
+		sine
+		{
+			sineperiod	26.0
+			sinemin		0.55
+			sinemax		1.0
+
+			resultvar	"$color2[2]"
+		}
+	}
+}

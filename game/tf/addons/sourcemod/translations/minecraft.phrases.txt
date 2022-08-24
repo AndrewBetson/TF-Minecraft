@@ -22,6 +22,11 @@
 		"en"	"{green}[Minecraft]{default} Original plugin by {vintage}Moonly Days{default}; overhaul by {unique}Andrew \"andrewb\" Betson{default}"
 	}
 
+	"MC_BlockCategoryMenu_Title"
+	{
+		"en"	"Select a Category"
+	}
+
 	"MC_BlockMenu_Title"
 	{
 		"en"	"Select a Block"
@@ -121,12 +126,12 @@
 
 	"MC_Protected"
 	{
-		"en"	"{green}[Minecraft]{default} This %t block is now protected."
+		"en"	"{green}[Minecraft]{default} This block is now protected."
 	}
 
 	"MC_Unprotected"
 	{
-		"en"	"{green}[Minecraft]{default} This %t block is no longer protected."
+		"en"	"{green}[Minecraft]{default} This block is no longer protected."
 	}
 
 	// Error messages.
@@ -176,13 +181,18 @@
 		"en"	"{green}[Minecraft]{default} You must be alive to build or break blocks."
 	}
 
-	"MC_BlockIDOutOfBounds"
+	"MC_CategoryIdxOutOfBounds"
 	{
-		"en"	"{green}[Minecraft]{default} Block ID outside of possible 1-128 range."
+		"en"	"{green}[Minecraft]{default} Category index outside of defined 0-%d range."
 	}
 
-	"MC_UndefinedBlockID"
+	"MC_BlockIdxOutOfCategoryBounds"
 	{
-		"en"	"{green}[Minecraft]{default} Undefined block ID."
+		"en"	"{green}[Minecraft]{default} Block index outside of category's defined 0-%d range."
+	}
+
+	"MC_BlockIdxOutOfGlobalBounds"
+	{
+		"en"	"{green}[Minecraft]{default} Block index outside of global 0-%d range."
 	}
 }

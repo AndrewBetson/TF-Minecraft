@@ -1,0 +1,7 @@
+"VertexLitGeneric"
+{
+	"$basetexture"		"models/minecraft/oakleaves"
+	"$alphatest"		"1"
+
+	"$surfaceprop"		"foliage"
+}

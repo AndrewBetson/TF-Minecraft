@@ -1,0 +1,6 @@
+"VertexLitGeneric"
+{
+	"$basetexture"		"models/minecraft/oakplanks"
+
+	"$surfaceprop"		"wood_plank"
+}

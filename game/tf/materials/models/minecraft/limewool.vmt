@@ -1,0 +1,6 @@
+"VertexLitGeneric"
+{
+	"$basetexture"		"models/minecraft/limewool"
+
+	"$surfaceprop"		"carpet"
+}

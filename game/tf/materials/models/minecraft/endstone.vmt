@@ -1,0 +1,6 @@
+"VertexLitGeneric"
+{
+	"$basetexture"		"models/minecraft/endstone"
+
+	"$surfaceprop"		"rock"
+}

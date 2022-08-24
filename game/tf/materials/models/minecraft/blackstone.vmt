@@ -1,0 +1,6 @@
+"VertexLitGeneric"
+{
+	"$basetexture"		"models/minecraft//blackstone"
+
+	"$surfaceprop"		"rock"
+}

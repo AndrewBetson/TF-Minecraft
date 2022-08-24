@@ -1,0 +1,7 @@
+"VertexLitGeneric"
+{
+	"$basetexture"		"models/minecraft/redstonelamp"
+	"$selfillum"		"1"
+
+	"$surfaceprop"		"glass"
+}

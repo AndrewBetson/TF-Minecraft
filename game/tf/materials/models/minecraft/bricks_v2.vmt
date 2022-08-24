@@ -1,0 +1,6 @@
+"VertexLitGeneric"
+{
+	"$basetexture"		"models/minecraft/bricks_v2"
+
+	"$surfaceprop"		"rock"
+}

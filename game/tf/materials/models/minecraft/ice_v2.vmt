@@ -1,0 +1,6 @@
+"VertexLitGeneric"
+{
+	"$basetexture"		"models/minecraft/ice"
+
+	"$surfaceprop"		"ice"
+}

@@ -1,7 +1,0 @@
-"VertexLitGeneric"
-{
-	"$basetexture"		"models/minecraft/glass"
-	"$alphatest"		"1"
-
-	"$surfaceprop"		"glass"
-}

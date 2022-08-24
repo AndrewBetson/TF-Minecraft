@@ -1,24 +1,19 @@
 /**
- * Copyright (c) 2019 Moonly Days.
  * Copyright Andrew Betson.
+ * Copyright Moonly Days.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, and/or distribute copies of
- * the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #if defined _minecraft_included
@@ -27,20 +22,28 @@
 
 #define _minecraft_included
 
+/** A category of blocks as defined in minecraft_blocks.cfg */
+enum struct BlockCategory_t
+{
+	int		nIndex;				/**< Index of this category in the block category menu. */
+	int		nNumBlockDefs;		/**< Number of block definitions contained within this category. */
+	char	szPhrase[ 64 ];		/**< Localization key used for the name of this category. */
+}
+
 /** A block as defined in minecraft_blocks.cfg */
 enum struct BlockDef_t
 {
-	int		nIndex;				/**< Index of this block in the block menu. */
-	char	szPhrase[ 32 ];		/**< Localization key used for the name of this block. */
-	char	szModel[ 32 ];		/**< Path to the model used for this block. */
-	char	szMaterial[ 32 ];	/**< Path, relative to materials/models/minecraft/, to the material used for this block. */
+	int		nCategoryIdx;		/**< Index of the category to display this block in. */
+	int		nIndex;				/**< Index of this block in the block menu relative to its parent menu(s). */
+	char	szPhrase[ 64 ];		/**< Localization key used for the name of this block. */
+	char	szModel[ 64 ];		/**< Path to the model used for this block. */
+	char	szMaterial[ 64 ];	/**< Path, relative to materials/models/minecraft/, to the material used for this block. */
 	char	szBuildSound[ 64 ];	/**< Path to the sound to play when this block is built. */
 	char	szBreakSound[ 64 ];	/**< Path to the sound to play when this block is broken. */
 	int		nSkin;				/**< Skin index to use for this block. */
 	int		nLimit;				/**< Maximum number of this block type that can exist in the world at a time. 0/-1 = no limit. */
 	bool	bOrientToPlayer;	/**< Rotate this block in 90 degree increments to face the builder. */
 	bool	bEmitsLight;		/**< Spawn a light_dynamic entity at this blocks origin. */
-	bool	bHidden;			/**< Don't display this block in the block menu. */
 }
 
 /** A block as it exists in the world. */
@@ -69,7 +72,7 @@ enum struct WorldBlock_t
  * Broadcast when a block is built by a client.
  *
  * @param nBuilderClientIdx	Client attempting to build a block.
- * @param hBlockDef			Type of block the client is attempting to build.
+ * @param hBlockDef			Index in the array of block defs of the block the client is attempting to build.
  *
  * @return Plugin_Handled or Plugin_Stop to prevent the block from being built, Plugin_Continue to allow it.
  */
@@ -89,11 +92,21 @@ forward Action MC_OnClientBreakBlock( int nBreakerClientIdx, int nWorldBlockIdx 
 
 /**
  * Get a block definition from the array of block definitions by index.
+ *
+ * @param nBlockDefIdx	Index in the array of block defs to retrieve.
+ * @param hBlockDef		Any array to store block def data in.
+ *
+ * @return SP_ERROR_NONE on success, anything else on failure.
  */
 native int MC_GetBlockDef( int nBlockDefIdx, any[] hBlockDef, int nSizeOfBlockDef = sizeof( BlockDef_t ) );
 
 /**
  * Get a world block from the array of world blocks by index.
+ *
+ * @param nWorldBlockIdx	Index in the array of world blocks to retrieve.
+ * @param hWorldBlock		Any array to store world block data in.
+ *
+ * @return SP_ERROR_NONE on success, anything else on failure.
  */
 native int MC_GetWorldBlock( int nWorldBlockIdx, any[] hWorldBlock, int nSizeOfWorldBlock = sizeof( WorldBlock_t ) );
 

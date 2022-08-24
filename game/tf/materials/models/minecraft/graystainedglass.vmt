@@ -1,0 +1,7 @@
+"VertexLitGeneric"
+{
+	"$basetexture"		"models/minecraft/graystainedglass"
+	"$translucent"		"1"
+
+	"$surfaceprop"		"glass"
+}
