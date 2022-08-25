@@ -35,7 +35,7 @@ $texturegroup	skins
 	{ polishedgranite			}	// 22
 	{ prismarine				}	// 23
 	{ prismarinebricks			}	// 24
-	{ purpurblock				}	// 25
+	{ purpur					}	// 25
 	{ redsandstone				}	// 26
 	{ sandstone					}	// 27
 
