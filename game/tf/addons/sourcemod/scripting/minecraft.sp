@@ -50,8 +50,8 @@ public Plugin myinfo =
 bool			g_bHasTrustFactor;
 TrustCondition	g_hTrustCond;
 
-ConVar			sv_mc_trustfactor_enable;
-ConVar			sv_mc_trustfactor_flags;
+ConVar			mc_trustfactor_enable;
+ConVar			mc_trustfactor_flags;
 
 bool			g_bIsClientTrusted[ MAXPLAYERS + 1 ];
 
@@ -85,8 +85,8 @@ public void OnPluginStart()
 	OnPluginStart_BuildMode();
 
 #if defined _trustfactor_included
-	sv_mc_trustfactor_enable = CreateConVar(
-		"sv_mc_trustfactor_enable",
+	mc_trustfactor_enable = CreateConVar(
+		"mc_trustfactor_enable",
 		"1",
 		"Whether or not to make use of the TrustFactor plugin by reBane/DosMike if it is detected.",
 		FCVAR_NONE,
@@ -94,15 +94,15 @@ public void OnPluginStart()
 		true, 1.0
 	);
 
-	sv_mc_trustfactor_flags = CreateConVar(
-		"sv_mc_trustfactor_flags",
+	mc_trustfactor_flags = CreateConVar(
+		"mc_trustfactor_flags",
 		"t",
 		"Which trust factor flag(s) to use. See the TrustFactor plugin documentation for a list of flags and their effects.",
 		FCVAR_NONE,
 		true, 0.0,
 		true, 1.0
 	);
-	sv_mc_trustfactor_flags.AddChangeHook( ConVar_TrustFactor_Flags );
+	mc_trustfactor_flags.AddChangeHook( ConVar_TrustFactor_Flags );
 #endif // defined _trustfactor_included
 
 	AutoExecConfig( true, "minecraft" );
@@ -168,7 +168,7 @@ public void OnAllPluginsLoaded()
 	if ( g_bHasTrustFactor )
 	{
 		char szBuf[ 32 ];
-		sv_mc_trustfactor_flags.GetString( szBuf, sizeof( szBuf ) );
+		mc_trustfactor_flags.GetString( szBuf, sizeof( szBuf ) );
 
 		g_hTrustCond.Parse( szBuf );
 	}

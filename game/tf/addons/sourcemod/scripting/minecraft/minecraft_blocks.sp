@@ -23,13 +23,13 @@ ArrayList	g_hBlockDefs;
 ArrayList	g_hWorldBlocks;
 int			g_nSelectedBlock[ MAXPLAYERS + 1 ] = { 1, ... };
 
-ConVar		sv_mc_block_limit;
-ConVar		sv_mc_melee_break;
-ConVar		sv_mc_remove_blocks_on_disconnect;
-ConVar		sv_mc_auto_protect_staff_blocks;
-ConVar		sv_mc_dynamiclimit;
-ConVar		sv_mc_dynamiclimit_bias;
-ConVar		sv_mc_dynamiclimit_threshold;
+ConVar		mc_block_limit;
+ConVar		mc_melee_break;
+ConVar		mc_remove_blocks_on_disconnect;
+ConVar		mc_auto_protect_staff_blocks;
+ConVar		mc_dynamiclimit;
+ConVar		mc_dynamiclimit_bias;
+ConVar		mc_dynamiclimit_threshold;
 
 int			g_nBlockLimit;
 
@@ -37,15 +37,15 @@ bool		g_bPluginDisabled = false;
 
 void OnPluginStart_Blocks()
 {
-	sv_mc_block_limit = CreateConVar(
-		"sv_mc_block_limit",
+	mc_block_limit = CreateConVar(
+		"mc_block_limit",
 		"256",
 		"Number of blocks that can exist in the map at a time.",
 		FCVAR_NOTIFY
 	);
 
-	sv_mc_melee_break = CreateConVar(
-		"sv_mc_melee_break",
+	mc_melee_break = CreateConVar(
+		"mc_melee_break",
 		"1",
 		"Allow players to break blocks by hitting them with melee weapons.",
 		FCVAR_NOTIFY,
@@ -53,8 +53,8 @@ void OnPluginStart_Blocks()
 		true, 1.0
 	);
 
-	sv_mc_remove_blocks_on_disconnect = CreateConVar(
-		"sv_mc_remove_blocks_on_disconnect",
+	mc_remove_blocks_on_disconnect = CreateConVar(
+		"mc_remove_blocks_on_disconnect",
 		"0",
 		"Remove all blocks built by a player when they leave the server.",
 		FCVAR_NONE,
@@ -62,8 +62,8 @@ void OnPluginStart_Blocks()
 		true, 1.0
 	);
 
-	sv_mc_auto_protect_staff_blocks = CreateConVar(
-		"sv_mc_auto_protect_staff_blocks",
+	mc_auto_protect_staff_blocks = CreateConVar(
+		"mc_auto_protect_staff_blocks",
 		"1",
 		"Automatically protect blocks built by staff players.",
 		FCVAR_NONE,
@@ -71,8 +71,8 @@ void OnPluginStart_Blocks()
 		true, 1.0
 	);
 
-	sv_mc_dynamiclimit = CreateConVar(
-		"sv_mc_dynamiclimit",
+	mc_dynamiclimit = CreateConVar(
+		"mc_dynamiclimit",
 		"0",
 		"Use a dynamic block limit based on the number of edicts in the map and the servers sv_lowedict_threshold value.",
 		FCVAR_NONE,
@@ -80,8 +80,8 @@ void OnPluginStart_Blocks()
 		true, 1.0
 	);
 
-	sv_mc_dynamiclimit_bias = CreateConVar(
-		"sv_mc_dynamiclimit_bias",
+	mc_dynamiclimit_bias = CreateConVar(
+		"mc_dynamiclimit_bias",
 		"500",
 		"Constant amount to subtract from dynamic block limit.",
 		FCVAR_NONE,
@@ -89,8 +89,8 @@ void OnPluginStart_Blocks()
 		true, 2047.0
 	);
 
-	sv_mc_dynamiclimit_threshold = CreateConVar(
-		"sv_mc_dynamiclimit_threshold",
+	mc_dynamiclimit_threshold = CreateConVar(
+		"mc_dynamiclimit_threshold",
 		"50",
 		"If the resolved dynamic limit is less than this amount, disable the plugin until next mapchange.",
 		FCVAR_NONE,
@@ -149,7 +149,7 @@ void OnClientPostAdminCheck_Blocks( int nClientIdx )
 
 void OnClientDisconnect_Blocks( int nClientIdx )
 {
-	if ( sv_mc_remove_blocks_on_disconnect.BoolValue )
+	if ( mc_remove_blocks_on_disconnect.BoolValue )
 	{
 		for ( int i = 0; i < g_hWorldBlocks.Length; i++ )
 		{
@@ -167,14 +167,14 @@ public void Event_TeamplayRoundStart( Event hEvent, const char[] szName, bool bD
 {
 	g_hWorldBlocks.Clear();
 
-	if ( sv_mc_dynamiclimit.BoolValue )
+	if ( mc_dynamiclimit.BoolValue )
 	{
 		int nLowEdictThreshold = GetConVarInt( FindConVar( "sv_lowedict_threshold" ) );
 		int nNumMapEnts = GetEntityCount();
-		int nDynamicLimitBias = sv_mc_dynamiclimit_bias.IntValue;
+		int nDynamicLimitBias = mc_dynamiclimit_bias.IntValue;
 
 		g_nBlockLimit = 2048 - nLowEdictThreshold - nNumMapEnts - nDynamicLimitBias;
-		if ( g_nBlockLimit < sv_mc_dynamiclimit_threshold.IntValue )
+		if ( g_nBlockLimit < mc_dynamiclimit_threshold.IntValue )
 		{
 			g_bPluginDisabled = true;
 			CPrintToChatAll( "%t", "MC_Disabled_DynamicLimitThreshold" );
@@ -182,7 +182,7 @@ public void Event_TeamplayRoundStart( Event hEvent, const char[] szName, bool bD
 	}
 	else
 	{
-		g_nBlockLimit = sv_mc_block_limit.IntValue;
+		g_nBlockLimit = mc_block_limit.IntValue;
 	}
 }
 
@@ -388,7 +388,7 @@ public void Block_TryBuild( int nClientIdx )
 	}
 
 #if defined _trustfactor_included
-	if ( g_bHasTrustFactor && !g_bIsClientTrusted[ nClientIdx ] && sv_mc_trustfactor_enable.BoolValue )
+	if ( g_bHasTrustFactor && !g_bIsClientTrusted[ nClientIdx ] && mc_trustfactor_enable.BoolValue )
 	{
 		CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_NotTrusted" );
 		EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
@@ -543,7 +543,7 @@ public void Block_TryBuild( int nClientIdx )
 	WorldBlock_t NewWorldBlock;
 	NewWorldBlock.nEntityRef = EntIndexToEntRef( nEnt );
 	NewWorldBlock.nBlockIdx = g_nSelectedBlock[ nClientIdx ];
-	NewWorldBlock.bProtected = bIsClientAdmin && sv_mc_auto_protect_staff_blocks.BoolValue ? true : false;
+	NewWorldBlock.bProtected = bIsClientAdmin && mc_auto_protect_staff_blocks.BoolValue ? true : false;
 	NewWorldBlock.vOrigin = vHitPoint;
 	NewWorldBlock.nBuilderClientIdx = nClientIdx;
 
@@ -592,7 +592,7 @@ public void Block_TryBreak( int nClientIdx )
 	}
 
 #if defined _trustfactor_included
-	if ( g_bHasTrustFactor && !g_bIsClientTrusted[ nClientIdx ] && sv_mc_trustfactor_enable.BoolValue )
+	if ( g_bHasTrustFactor && !g_bIsClientTrusted[ nClientIdx ] && mc_trustfactor_enable.BoolValue )
 	{
 		CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_NotTrusted" );
 		EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
@@ -1040,7 +1040,7 @@ public Action Block_OnTakeDamage(
 	float vDamageForce[ 3 ], float vDamagePosition[ 3 ], int nDamageCustom
 )
 {
-	if ( sv_mc_melee_break.BoolValue )
+	if ( mc_melee_break.BoolValue )
 	{
 		if ( nDamageType & DMG_CLUB )
 		{
@@ -1051,7 +1051,7 @@ public Action Block_OnTakeDamage(
 			}
 
 		#if defined _trustfactor_included
-			if ( g_bHasTrustFactor && !g_bIsClientTrusted[ nAttacker ] && sv_mc_trustfactor_enable.BoolValue )
+			if ( g_bHasTrustFactor && !g_bIsClientTrusted[ nAttacker ] && mc_trustfactor_enable.BoolValue )
 			{
 				CPrintToChat( nAttacker, "%t", "MC_CannotBuild_NotTrusted" );
 				EmitSoundToClient( nAttacker, "common/wpn_denyselect.wav" );

@@ -22,15 +22,15 @@ Console Elements
 This plugin exposes the following console elements:
 | Name | Description | Default | Notes |
 |------|------|------|------|
-| `sv_mc_block_limit` | Number of blocks that can exist in the world at a time. | 256 | Consider using map configs to raise/lower this per-map. |
-| `sv_mc_melee_break` | Allow players to break blocks by hitting them with melee weapons. | 1 | None |
-| `sv_mc_remove_blocks_on_disconnect` | Remove blocks built by players when they leave the server. | 0 | None |
-| `sv_mc_auto_protect_staff_blocks` | Automatically protect blocks built by staff players. | 1 | None |
-| `sv_mc_dynamiclimit` | Enable the use of a dynamic block limit based on the number of entities in the map and the servers `sv_lowedict_threshold` value. | 0 | None |
-| `sv_mc_dynamiclimit_bias` | Constant number to subtract from resolved dynamic limit to account for post-map load edicts such as players. | 500 | Servers with lower maxplayer counts may want to lower this. |
-| `sv_mc_dynamiclimit_threshold` | If the resolved limit is lower than this number, disable the plugin until the next mapchange. | 50 | None |
-| `sv_mc_trustfactor_enable` | Whether or not to make use of the TrustFactor plugin by reBane/DosMike if it is detected. | 1 | Requires the TrustFactor plugin be installed. |
-| `sv_mc_trustfactor_flags` | Which trust factor flag(s) to use. | "t" | See the TrustFactor documentation for a list of flags and their effects. |
+| `mc_block_limit` | Number of blocks that can exist in the world at a time. | 256 | Consider using map configs to raise/lower this per-map. |
+| `mc_melee_break` | Allow players to break blocks by hitting them with melee weapons. | 1 | None |
+| `mc_remove_blocks_on_disconnect` | Remove blocks built by players when they leave the server. | 0 | None |
+| `mc_auto_protect_staff_blocks` | Automatically protect blocks built by staff players. | 1 | None |
+| `mc_dynamiclimit` | Enable the use of a dynamic block limit based on the number of entities in the map and the servers `sv_lowedict_threshold` value. | 0 | None |
+| `mc_dynamiclimit_bias` | Constant number to subtract from resolved dynamic limit to account for post-map load edicts such as players. | 500 | Servers with lower maxplayer counts may want to lower this. |
+| `mc_dynamiclimit_threshold` | If the resolved limit is lower than this number, disable the plugin until the next mapchange. | 50 | None |
+| `mc_trustfactor_enable` | Whether or not to make use of the TrustFactor plugin by reBane/DosMike if it is detected. | 1 | Requires the TrustFactor plugin be installed. |
+| `mc_trustfactor_flags` | Which trust factor flag(s) to use. | "t" | See the TrustFactor documentation for a list of flags and their effects. |
 | `sm_mc_build`/`sm_build` | Builds a block under the calling players crosshair. | N/A | Calling player must not be block-banned |
 | `sm_mc_break`/`sm_break` | Breaks the block under the calling players crosshair. | N/A | Calling player must not be block-banned |
 | `sm_mc_block(s)`/`sm_block(s)` | Allows the calling player to select a block. | N/A | None |
