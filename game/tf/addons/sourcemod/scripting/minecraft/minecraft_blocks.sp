@@ -43,6 +43,7 @@ void OnPluginStart_Blocks()
 		"Number of blocks that can exist in the map at a time.",
 		FCVAR_NOTIFY
 	);
+	mc_block_limit.AddChangeHook( ConVar_BlockLimit );
 
 	mc_melee_break = CreateConVar(
 		"mc_melee_break",
@@ -75,10 +76,11 @@ void OnPluginStart_Blocks()
 		"mc_dynamiclimit",
 		"0",
 		"Use a dynamic block limit based on the number of edicts in the map and the servers sv_lowedict_threshold value.",
-		FCVAR_NONE,
+		FCVAR_NOTIFY,
 		true, 0.0,
 		true, 1.0
 	);
+	mc_dynamiclimit.AddChangeHook( ConVar_DynamicBlockLimit );
 
 	mc_dynamiclimit_bias = CreateConVar(
 		"mc_dynamiclimit_bias",
@@ -184,6 +186,52 @@ public void Event_TeamplayRoundStart( Event hEvent, const char[] szName, bool bD
 	{
 		g_nBlockLimit = mc_block_limit.IntValue;
 	}
+}
+
+public void ConVar_BlockLimit( ConVar hConVar, const char[] szOldValue, const char[] szNewValue )
+{
+	if ( mc_dynamiclimit.BoolValue )
+	{
+		return;
+	}
+
+	int nNewLimit = StringToInt( szNewValue );
+	if ( nNewLimit <= 0 )
+	{
+		g_bPluginDisabled = true;
+		CPrintToChatAll( "%t", g_bPluginDisabled ? "MC_Plugin_Disabled" : "MC_Plugin_Enabled" );
+	}
+
+	g_nBlockLimit = StringToInt( szNewValue );
+}
+
+public void ConVar_DynamicBlockLimit( ConVar hConVar, const char[] szOldValue, const char[] szNewValue )
+{
+	bool bOldValue = view_as< bool >( StringToInt( szOldValue ) );
+	bool bNewValue = view_as< bool >( StringToInt( szNewValue ) );
+
+	if ( ( bOldValue && bNewValue ) || ( !bOldValue && !bNewValue ) )
+	{
+		// Someone changed it to either >1 or <0 for some reason. Don't do anything.
+		return;
+	}
+
+	int nNewBlockLimit;
+	if ( bNewValue )
+	{
+		nNewBlockLimit = Block_CalculateDynamicLimit();
+		if ( nNewBlockLimit < mc_dynamiclimit_threshold.IntValue )
+		{
+			g_bPluginDisabled = true;
+			CPrintToChatAll( "%t", "MC_Disabled_DynamicLimitThreshold" );
+		}
+	}
+	else
+	{
+		nNewBlockLimit = mc_block_limit.IntValue;
+	}
+
+	g_nBlockLimit = nNewBlockLimit;
 }
 
 public Action Cmd_MC_Build( int nClientIdx, int nNumArgs )
@@ -1011,6 +1059,15 @@ public int Block_GetNumberOfTypeInWorld( int nBlockIdx )
 	}
 
 	return nNumInWorld;
+}
+
+public int Block_CalculateDynamicLimit()
+{
+	int nLowEdictThreshold = GetConVarInt( FindConVar( "sv_lowedict_threshold" ) );
+	int nNumMapEnts = GetEntityCount();
+	int nDynamicLimitBias = mc_dynamiclimit_bias.IntValue;
+
+	return 2048 - nLowEdictThreshold - nNumMapEnts - nDynamicLimitBias;
 }
 
 public bool IsBlockOfType( int nEntity, int nBlockIdx )
