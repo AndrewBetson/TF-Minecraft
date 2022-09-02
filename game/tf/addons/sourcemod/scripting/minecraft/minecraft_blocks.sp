@@ -278,7 +278,7 @@ public Action Cmd_MC_BuiltBy( int nClientIdx, int nNumArgs )
 	int nTarget = GetClientAimTarget( nClientIdx, false );
 	if ( IsValidBlock( nTarget ) )
 	{
-		char szBuilderClientAuthID[ 32 ];
+		char szBuilderClientAuthID[ MAX_NAME_LENGTH + 64 + 4 ];
 		GetEntPropString( nTarget, Prop_Data, "m_iName", szBuilderClientAuthID, sizeof( szBuilderClientAuthID ) );
 
 		CPrintToChat( nClientIdx, "%t", "MC_BuiltBy", szBuilderClientAuthID );
