@@ -461,6 +461,13 @@ public void Block_TryBuild( int nClientIdx )
 		return;
 	}
 
+	if ( TF2_IsPlayerInCondition( nClientIdx, TFCond_Cloaked ) )
+	{
+		CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_Cloaked" );
+		EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav")
+		return;
+	}
+
 	// Clamp selected block to valid range.
 	if ( g_nSelectedBlock[ nClientIdx ] < 0 )					g_nSelectedBlock[ nClientIdx ] = 0;
 	if ( g_nSelectedBlock[ nClientIdx ] > g_hBlockDefs.Length )	g_nSelectedBlock[ nClientIdx ] = g_hBlockDefs.Length;
@@ -660,6 +667,13 @@ public void Block_TryBreak( int nClientIdx )
 	{
 		CPrintToChat( nClientIdx, "%t", "MC_MustBeAlive" );
 		EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav" );
+		return;
+	}
+
+	if ( TF2_IsPlayerInCondition( nClientIdx, TFCond_Cloaked ) )
+	{
+		CPrintToChat( nClientIdx, "%t", "MC_CannotBuild_Cloaked" );
+		EmitSoundToClient( nClientIdx, "common/wpn_denyselect.wav")
 		return;
 	}
 
@@ -1128,6 +1142,15 @@ public Action Block_OnTakeDamage(
 			{
 				CPrintToChat( nAttacker, "%t", "MC_BlockProtected" );
 				EmitSoundToClient( nAttacker, "common/wpn_denyselect.wav" );
+				return Plugin_Continue;
+			}
+
+			// Technically this should never be able to happen,
+			// but I'm adding this in case someone finds a way.
+			if ( TF2_IsPlayerInCondition( nAttacker, TFCond_Cloaked ) )
+			{
+				CPrintToChat( nAttacker, "%t", "MC_CannotBuild_Cloaked" );
+				EmitSoundToClient( nAttacker, "common/wpn_denyselect.wav")
 				return Plugin_Continue;
 			}
 

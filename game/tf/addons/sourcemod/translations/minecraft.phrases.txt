@@ -171,6 +171,11 @@
 		"en"	"{green}[Minecraft]{default} Can't build blocks near or above teleporters. Build somewhere else."
 	}
 
+	"MC_CannotBuild_Cloaked"
+	{
+		"en"	"{green}[Minecraft]{default} Can't build or break blocks while cloaked."
+	}
+
 	"MC_BlockProtected"
 	{
 		"en"	"{green}[Minecraft]{default} This block is protected, and cannot be broken by non-staff players."
