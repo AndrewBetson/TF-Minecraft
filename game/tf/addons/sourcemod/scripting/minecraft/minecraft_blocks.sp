@@ -1191,23 +1191,19 @@ void LoadConfig()
 {
 	char szCfgLocation[ 96 ];
 	BuildPath( Path_SM, szCfgLocation, 96, "configs/minecraft_blocks.cfg" );
+
 	KeyValues hKeyValues = CreateKeyValues( "Blocks" );
 	FileToKeyValues( hKeyValues, szCfgLocation );
+	hKeyValues.GotoFirstSubKey();
 
 	int nNumKeys = 0;
 	for( ;; )
 	{
-		char szNumKeys[ 4 ];
-		IntToString( nNumKeys, szNumKeys, 4 );
-
-		if ( !hKeyValues.JumpToKey( szNumKeys ) )
-		{
-			break;
-		}
-
-		BlockCategory_t NewCategory;
-		NewCategory.nIndex = nNumKeys;
-		hKeyValues.GetString( "phrase", NewCategory.szPhrase, sizeof( BlockCategory_t::szPhrase ) );
+		BlockCategory_t hNewCategory;
+		hNewCategory.nIndex = nNumKeys;
+		hKeyValues.GetSectionName( hNewCategory.szPhrase, sizeof( BlockCategory_t::szPhrase ) );
+//		hKeyValues.GetString( "phrase", hNewCategory.szPhrase, sizeof( BlockCategory_t::szPhrase ) );
+		PrintToServer( "CATEGORY: %s", hNewCategory.szPhrase );
 
 		// Allow categories to define some defaults for contained block defs.
 
@@ -1231,51 +1227,63 @@ void LoadConfig()
 		}
 
 		int nNumSubKeys = 0;
+		hKeyValues.GotoFirstSubKey();
 		for( ;; )
 		{
-			char szNumSubKeys[ 4 ];
-			IntToString( nNumSubKeys, szNumSubKeys, sizeof( szNumSubKeys ) );
+			char szSectionName[ sizeof( BlockDef_t::szPhrase ) ];
+			hKeyValues.GetSectionName( szSectionName, sizeof( szSectionName ) );
 
-			if ( !hKeyValues.JumpToKey( szNumSubKeys ) )
+			if ( strcmp( szSectionName, "sounds" ) == 0 )
 			{
-				break;
+				hKeyValues.GotoNextKey();
+				continue;
 			}
 
-			BlockDef_t NewBlockDef;
-			NewBlockDef.nCategoryIdx = nNumKeys;
-			NewBlockDef.nIndex = nNumSubKeys;
-			hKeyValues.GetString( "phrase", NewBlockDef.szPhrase, sizeof( BlockDef_t::szPhrase ) );
-			hKeyValues.GetString( "model", NewBlockDef.szModel, sizeof( BlockDef_t::szModel ), szDefaultModel );
-			hKeyValues.GetString( "material", NewBlockDef.szMaterial, sizeof( BlockDef_t::szMaterial ) );
-			NewBlockDef.nSkin = hKeyValues.GetNum( "skin" );
-			NewBlockDef.nLimit = hKeyValues.GetNum( "limit" );
-			NewBlockDef.bOrientToPlayer = view_as< bool >( hKeyValues.GetNum( "orienttoplayer" ) );
-			NewBlockDef.bEmitsLight = view_as< bool >( hKeyValues.GetNum( "light" ) );
+			BlockDef_t hNewBlockDef;
+			hNewBlockDef.nCategoryIdx = nNumKeys;
+			hNewBlockDef.nIndex = nNumSubKeys;
+			strcopy( hNewBlockDef.szPhrase, sizeof( BlockDef_t::szPhrase ), szSectionName );
+//			hKeyValues.GetString( "phrase", hNewBlockDef.szPhrase, sizeof( BlockDef_t::szPhrase ) );
+			hKeyValues.GetString( "model", hNewBlockDef.szModel, sizeof( BlockDef_t::szModel ), szDefaultModel );
+			hKeyValues.GetString( "material", hNewBlockDef.szMaterial, sizeof( BlockDef_t::szMaterial ) );
+			hNewBlockDef.nSkin = hKeyValues.GetNum( "skin" );
+			hNewBlockDef.nLimit = hKeyValues.GetNum( "limit" );
+			hNewBlockDef.bOrientToPlayer = view_as< bool >( hKeyValues.GetNum( "orienttoplayer" ) );
+			hNewBlockDef.bEmitsLight = view_as< bool >( hKeyValues.GetNum( "light" ) );
 
 			if ( hKeyValues.JumpToKey( "sounds" ) )
 			{
-				hKeyValues.GetString( "build", NewBlockDef.szBuildSound, sizeof( BlockDef_t::szBuildSound ), szDefaultBuildSound );
-				hKeyValues.GetString( "break", NewBlockDef.szBreakSound, sizeof( BlockDef_t::szBreakSound ), szDefaultBreakSound );
+				hKeyValues.GetString( "build", hNewBlockDef.szBuildSound, sizeof( BlockDef_t::szBuildSound ), szDefaultBuildSound );
+				hKeyValues.GetString( "break", hNewBlockDef.szBreakSound, sizeof( BlockDef_t::szBreakSound ), szDefaultBreakSound );
 
 				hKeyValues.GoBack();
 			}
 			else
 			{
-				strcopy( NewBlockDef.szBuildSound, sizeof( BlockDef_t::szBuildSound ), szDefaultBuildSound );
-				strcopy( NewBlockDef.szBreakSound, sizeof( BlockDef_t::szBreakSound ), szDefaultBreakSound );
+				strcopy( hNewBlockDef.szBuildSound, sizeof( BlockDef_t::szBuildSound ), szDefaultBuildSound );
+				strcopy( hNewBlockDef.szBreakSound, sizeof( BlockDef_t::szBreakSound ), szDefaultBreakSound );
 			}
 
-			g_hBlockDefs.PushArray( NewBlockDef );
-			NewCategory.nNumBlockDefs = nNumSubKeys;
+			g_hBlockDefs.PushArray( hNewBlockDef );
+			hNewCategory.nNumBlockDefs = nNumSubKeys;
 
 			nNumSubKeys++;
-			hKeyValues.GoBack();
+
+			if ( !hKeyValues.GotoNextKey() )
+			{
+				hKeyValues.GoBack();
+				break;
+			}
 		}
 
-		g_hBlockCategories.PushArray( NewCategory );
-
+		g_hBlockCategories.PushArray( hNewCategory );
 		nNumKeys++;
-		hKeyValues.GoBack();
+
+		if ( !hKeyValues.GotoNextKey() )
+		{
+			hKeyValues.GoBack();
+			break;
+		}
 	}
 
 	delete hKeyValues;
