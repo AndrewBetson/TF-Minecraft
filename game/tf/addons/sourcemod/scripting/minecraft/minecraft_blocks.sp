@@ -1202,8 +1202,6 @@ void LoadConfig()
 		BlockCategory_t hNewCategory;
 		hNewCategory.nIndex = nNumKeys;
 		hKeyValues.GetSectionName( hNewCategory.szPhrase, sizeof( BlockCategory_t::szPhrase ) );
-//		hKeyValues.GetString( "phrase", hNewCategory.szPhrase, sizeof( BlockCategory_t::szPhrase ) );
-		PrintToServer( "CATEGORY: %s", hNewCategory.szPhrase );
 
 		// Allow categories to define some defaults for contained block defs.
 
@@ -1243,7 +1241,6 @@ void LoadConfig()
 			hNewBlockDef.nCategoryIdx = nNumKeys;
 			hNewBlockDef.nIndex = nNumSubKeys;
 			strcopy( hNewBlockDef.szPhrase, sizeof( BlockDef_t::szPhrase ), szSectionName );
-//			hKeyValues.GetString( "phrase", hNewBlockDef.szPhrase, sizeof( BlockDef_t::szPhrase ) );
 			hKeyValues.GetString( "model", hNewBlockDef.szModel, sizeof( BlockDef_t::szModel ), szDefaultModel );
 			hKeyValues.GetString( "material", hNewBlockDef.szMaterial, sizeof( BlockDef_t::szMaterial ) );
 			hNewBlockDef.nSkin = hKeyValues.GetNum( "skin" );
