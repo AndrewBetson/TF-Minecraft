@@ -1,4 +1,4 @@
-An overhaul of the [TF2_Minecraft](https://github.com/MoonlyDays/TF2_MinecraftBlocks) plugin by [MoonlyDays](https://github.com/MoonlyDays) that adds several pages of new blocks, per-block build/break sound fx, and more.
+An overhaul of the [TF2_Minecraft](https://github.com/MoonlyDays/TF2_MinecraftBlocks) plugin by [MoonlyDays](https://github.com/MoonlyDays).
 
 New Features
 ==================
@@ -26,6 +26,7 @@ This plugin exposes the following console elements:
 | `mc_melee_break` | Allow players to break blocks by hitting them with melee weapons. | 1 | None |
 | `mc_remove_blocks_on_disconnect` | Remove blocks built by players when they leave the server. | 0 | None |
 | `mc_auto_protect_staff_blocks` | Automatically protect blocks built by staff players. | 1 | None |
+| `mc_default_block` | Global index of the block players have selected by default. | 106 *(grass)* | None |
 | `mc_dynamiclimit` | Enable the use of a dynamic block limit based on the number of entities in the map and the servers `sv_lowedict_threshold` value. | 0 | None |
 | `mc_dynamiclimit_bias` | Constant number to subtract from resolved dynamic limit to account for post-map load edicts such as players. | 500 | Servers with lower maxplayer counts may want to lower this. |
 | `mc_dynamiclimit_threshold` | If the resolved limit is lower than this number, disable the plugin until the next mapchange. | 50 | None |
@@ -39,6 +40,7 @@ This plugin exposes the following console elements:
 | `sm_mc_howmany`/`sm_limit` | Print the current number of blocks in the world to the calling player. | N/A | None |
 | `sm_mc_builtby` | Print the SteamID of the player that built the block under the calling players cursor. | N/A | None |
 | `sm_mc_credits` | Print the credits for this plugin to the calling players chat. | N/A | None |
+| `sm_mc_clearme` | Clear all blocks built by the calling player. | N/A | None |
 | `sm_mc_banstatus` | Tell the calling player whether they are block-banned or not. | N/A | None |
 | `sm_mc_ban` | Ban a player from being able to build and break blocks. | N/A | Requires >= ADMFLAG_BAN command privilege |
 | `sm_mc_unban` | Allow a player to build and break blocks again. | N/A | Requires >= ADMFLAG_UNBAN command privilege |
@@ -50,9 +52,9 @@ This plugin exposes the following console elements:
 Dependencies
 ==================
 
+- [morecolors](https://raw.githubusercontent.com/DoctorMcKay/sourcemod-plugins/master/scripting/include/morecolors.inc) (*compilation only*)
 - [TrustFactor](https://github.com/DosMike/SM-TrustFactor) (*optional*)
 - [GraviHands](https://github.com/DosMike/TF2-GraviHands) (*optional, only recommended if compiling for a server that uses it*)
-- [morecolors](https://raw.githubusercontent.com/DoctorMcKay/sourcemod-plugins/master/scripting/include/morecolors.inc) (*compilation only*)
 
 License
 ==================
@@ -62,7 +64,6 @@ The Minecraft content included in this repo is released under the terms of the "
 TODO
 ==================
 - Expand plugin API to allow other plugins to define new categories and blocks.
-- Find a way to allow players to use the grappling hook while in buildmode.
 - Look into `TR_GetPlaneNormal` for more robust block-on-block building.
 - Document the arduous process of adding a new block type.
 
