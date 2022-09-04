@@ -98,11 +98,6 @@ public Action OnPlayerRunCmd(
 		return Plugin_Continue;
 	}
 
-	if ( nImpulse != 0 )
-	{
-		PrintToServer( "%d", nImpulse );
-	}
-
 	SetEntPropFloat( nClientIdx, Prop_Send, "m_flNextAttack", GetGameTime() + 1.0 );
 
 	if ( nButtonMask & IN_ATTACK && !( g_nLastFrameButtonMask[ nClientIdx ] & IN_ATTACK ) )			Block_TryBreak( nClientIdx );

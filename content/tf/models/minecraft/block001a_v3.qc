@@ -1,4 +1,4 @@
-$modelname		"minecraft/block001a_v2.mdl"
+$modelname		"minecraft/block001a_v3.mdl"
 $body ref		"block001a_reference.dmx"
 $sequence idle	"block001a_reference.dmx"
 $collisionmodel	"block_physics.dmx"
@@ -26,22 +26,22 @@ $texturegroup	skins
 	{ whiteconcrete			}	// 14
 	{ yellowconcrete		}	// 15
 
-	{ blackstainedglass		}	// 16
-	{ bluestainedglass		}	// 17
-	{ brownstainedglass		}	// 18
-	{ cyanstainedglass		}	// 19
-	{ graystainedglass		}	// 20
-	{ greenstainedglass		}	// 21
-	{ lightbluestainedglass	}	// 22
+	{ glass_v2				}	// 16
+	{ blackstainedglass		}	// 17
+	{ bluestainedglass		}	// 18
+	{ brownstainedglass		}	// 19
+	{ cyanstainedglass		}	// 20
+	{ graystainedglass		}	// 21
+	{ greenstainedglass		}	// 22
 
-	{ lightgraystainedglass	}	// 23
-	{ limestainedglass		}	// 24
-	{ magentastainedglass	}	// 25
-	{ orangestainedglass	}	// 26
-	{ pinkstainedglass		}	// 27
-	{ purplestainedglass	}	// 28
-	{ redstainedglass		}	// 29
+	{ lightbluestainedglass	}	// 23
+	{ lightgraystainedglass	}	// 24
+	{ limestainedglass		}	// 25
+	{ magentastainedglass	}	// 26
+	{ orangestainedglass	}	// 27
+	{ pinkstainedglass		}	// 28
+	{ purplestainedglass	}	// 29
 
-	{ whitestainedglass		}	// 30
-	{ yellowstainedglass	}	// 31
+	{ redstainedglass		}	// 30
+	{ whitestainedglass		}	// 31
 }

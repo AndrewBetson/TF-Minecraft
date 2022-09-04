@@ -94,6 +94,11 @@
 		"en"		"Glass"
 	}
 
+	"MC_Block_Glass"
+	{
+		"en"		"Glass"
+	}
+
 	"MC_Block_BlackStainedGlass"
 	{
 		"en"		"Black Stained Glass"

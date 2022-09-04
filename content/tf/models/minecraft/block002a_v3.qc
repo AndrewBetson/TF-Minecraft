@@ -1,4 +1,4 @@
-$modelname		"minecraft/block002a_v2.mdl"
+$modelname		"minecraft/block002a_v3.mdl"
 $body ref		"block002a_reference.dmx"
 $sequence idle	"block002a_reference.dmx"
 $collisionmodel	"block_physics.dmx"
@@ -33,14 +33,14 @@ $texturegroup	skins
 
 	{ basalt				}	// 21
 	{ blackstone			}	// 22
-	{ deepslate				}	// 23
-	{ polishedbasalt		}	// 24
-	{ purpurpillar			}	// 25
-	{ acacialog				}	// 26
-	{ birchlog				}	// 27
+	{ chiseledredsandstone	}	// 23
+	{ chiseledsandstone		}	// 24
+	{ cutredsandstone		}	// 25
+	{ cutsandstone			}	// 26
+	{ deepslate				}	// 27
 
-	{ junglelog				}	// 28
-	{ mangrovelog			}	// 29
-	{ oaklog				}	// 30
-	{ sprucelog				}	// 31
+	{ polishedbasalt		}	// 28
+	{ purpurpillar			}	// 29
+	{ redsandstone			}	// 30
+	{ sandstone				}	// 31
 }
