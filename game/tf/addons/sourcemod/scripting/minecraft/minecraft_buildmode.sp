@@ -19,6 +19,7 @@
 bool		g_bIsClientInBuildMode[ MAXPLAYERS + 1 ]			= { false, ... };
 bool		g_bClientHasSeenBuildModeTutorial[ MAXPLAYERS + 1 ]	= { false, ... };
 int			g_nLastFrameButtonMask[ MAXPLAYERS + 1 ]			= { 0, ... };
+bool		g_bWantsToUseGrapplingHook[ MAXPLAYERS + 1 ]		= { false, ... };
 
 Handle		g_hCookie_SawBuildModeTutorial;
 
@@ -42,6 +43,7 @@ void OnClientDisconnect_BuildMode( int nClientIdx )
 	g_bIsClientInBuildMode[ nClientIdx ] = false;
 	g_bClientHasSeenBuildModeTutorial[ nClientIdx ] = false;
 	g_nLastFrameButtonMask[ nClientIdx ] = 0;
+	g_bWantsToUseGrapplingHook[ nClientIdx ] = false;
 }
 
 Action Cmd_MC_BuildMode( int nClientIdx, int nNumArgs )
@@ -59,13 +61,28 @@ Action Cmd_MC_BuildMode( int nClientIdx, int nNumArgs )
 			hData.WriteCell( nClientIdx );
 			hData.WriteCell( 0 );
 		}
+		SDKHook( nClientIdx, SDKHook_WeaponSwitch, OnPlayerSwitchWeapon );
 	}
 	else
 	{
 		TF2_HudNotificationCustom( nClientIdx, "ico_demolish", -1, false, "%t", "MC_BuildMode_Deactivated" );
+		SDKUnhook( nClientIdx, SDKHook_WeaponSwitch, OnPlayerSwitchWeapon );
+		g_bWantsToUseGrapplingHook[ nClientIdx ] = false;
 	}
 
 	return Plugin_Handled;
+}
+
+public Action OnPlayerSwitchWeapon( int nClientIdx, int nWeaponEdictIdx )
+{
+	if ( !IsClientInGame( nClientIdx ) || !IsPlayerAlive( nClientIdx ) || !IsValidEdict( nWeaponEdictIdx ) )
+	{
+		return Plugin_Continue;
+	}
+
+	g_bWantsToUseGrapplingHook[ nClientIdx ] = GetEntProp( nWeaponEdictIdx, Prop_Send, "m_iItemDefinitionIndex" ) == 1152;
+
+	return Plugin_Continue;
 }
 
 public Action OnPlayerRunCmd(
@@ -76,9 +93,14 @@ public Action OnPlayerRunCmd(
 	int &nSeed, int vMousePos[ 2  ]
 )
 {
-	if ( !g_bIsClientInBuildMode[ nClientIdx ] || !IsClientInGame( nClientIdx ) )
+	if ( !g_bIsClientInBuildMode[ nClientIdx ] || !IsClientInGame( nClientIdx ) || g_bWantsToUseGrapplingHook[ nClientIdx ] )
 	{
 		return Plugin_Continue;
+	}
+
+	if ( nImpulse != 0 )
+	{
+		PrintToServer( "%d", nImpulse );
 	}
 
 	SetEntPropFloat( nClientIdx, Prop_Send, "m_flNextAttack", GetGameTime() + 1.0 );
