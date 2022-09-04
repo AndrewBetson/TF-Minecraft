@@ -120,6 +120,7 @@ void OnPluginStart_Blocks()
 	RegConsoleCmd( "sm_mc_howmany", Cmd_MC_HowMany, "Print the current number of blocks in the world." );
 	RegConsoleCmd( "sm_mc_builtby", Cmd_MC_BuiltBy, "Print the SteamID of the player that built the block under the calling players cursor." );
 	RegConsoleCmd( "sm_mc_credits", Cmd_MC_Credits, "Print the credits for this plugin." );
+	RegConsoleCmd( "sm_mc_clearme", Cmd_MC_ClearMe, "Remove all of the calling players blocks from the world." );
 
 	// Backwards compatible commands so people don't have to update their binds,
 	// and staff on servers upgrading from the original plugin don't get inundated
@@ -374,6 +375,14 @@ public Action Cmd_MC_BuiltBy( int nClientIdx, int nNumArgs )
 public Action Cmd_MC_Credits( int nClientIdx, int nNumArgs )
 {
 	CPrintToChat( nClientIdx, "%t", "MC_Credits" );
+	return Plugin_Handled;
+}
+
+public Action Cmd_MC_ClearMe( int nClientIdx, int nNumArgs )
+{
+	Block_ClearPlayer( nClientIdx );
+	CPrintToChat( nClientIdx, "%t", "MC_ClearedOwnBlocks" );
+
 	return Plugin_Handled;
 }
 

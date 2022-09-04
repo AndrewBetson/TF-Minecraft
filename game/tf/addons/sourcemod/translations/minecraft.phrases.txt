@@ -77,6 +77,11 @@
 		"en"	"{green}[Minecraft]{default} Consider using !mc_buildmode instead of !build and !break. This message will only display once."
 	}
 
+	"MC_ClearedOwnBlocks"
+	{
+		"en"	"{green}[Minecraft]{default} All of your blocks have been removed from the map."
+	}
+
 	// Admin commands.
 
 	"MC_ClearedAll"
