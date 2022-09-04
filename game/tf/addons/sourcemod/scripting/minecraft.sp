@@ -141,6 +141,7 @@ public void OnClientPostAdminCheck( int nClientIdx )
 public void OnClientCookiesCached( int nClientIdx )
 {
 	OnClientCookiesCached_Bans( nClientIdx );
+	OnClientCookiesCached_Blocks( nClientIdx );
 	OnClientCookiesCached_BuildMode( nClientIdx );
 }
 

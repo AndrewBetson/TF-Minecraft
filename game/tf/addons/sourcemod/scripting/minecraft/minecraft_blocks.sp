@@ -30,10 +30,14 @@ ConVar		mc_auto_protect_staff_blocks;
 ConVar		mc_dynamiclimit;
 ConVar		mc_dynamiclimit_bias;
 ConVar		mc_dynamiclimit_threshold;
+ConVar		mc_default_block;
 
 int			g_nBlockLimit;
 
 bool		g_bPluginDisabled = false;
+
+Handle		g_hCookie_SawBuildModeSuggestion;
+bool		g_bClientHasSeenBuildModeSuggestion[ MAXPLAYERS + 1 ];
 
 void OnPluginStart_Blocks()
 {
@@ -100,6 +104,14 @@ void OnPluginStart_Blocks()
 		true, 2047.0
 	);
 
+	mc_default_block = CreateConVar(
+		"mc_default_block",
+		"106", // Grass
+		"Defines which block is selected by default by global index.",
+		FCVAR_NONE,
+		true, 0.0
+	);
+
 	RegConsoleCmd( "sm_mc_build", Cmd_MC_Build, "Build currently selected block." );
 	RegConsoleCmd( "sm_mc_break", Cmd_MC_Break, "Break block under cursor." );
 	RegConsoleCmd( "sm_mc_block", Cmd_MC_Block, "Select a block." );
@@ -129,6 +141,8 @@ void OnPluginStart_Blocks()
 	g_hBlockDefs = new ArrayList( sizeof( BlockDef_t ) );
 	g_hWorldBlocks = new ArrayList( sizeof( WorldBlock_t ) );
 
+	g_hCookie_SawBuildModeSuggestion = RegClientCookie( "mc_buildmode_suggestion", "Player has seen buildmode suggestion", CookieAccess_Protected );
+
 	LoadConfig();
 }
 
@@ -142,11 +156,21 @@ void OnMapStart_Blocks()
 
 void OnClientPostAdminCheck_Blocks( int nClientIdx )
 {
-	g_nSelectedBlock[ nClientIdx ] = 0;
+	int nDefaultBlock = mc_default_block.IntValue > g_hBlockDefs.Length ? g_hBlockDefs.Length : mc_default_block.IntValue;
+
+	g_nSelectedBlock[ nClientIdx ] = nDefaultBlock;
 	if ( g_bIsBanned[ nClientIdx ] )
 	{
 		CheckClientBan( nClientIdx );
 	}
+}
+
+void OnClientCookiesCached_Blocks( int nClientIdx )
+{
+	char szCookieValue[ 4 ];
+	GetClientCookie( nClientIdx, g_hCookie_SawBuildModeSuggestion, szCookieValue, sizeof( szCookieValue ) );
+
+	g_bClientHasSeenBuildModeSuggestion[ nClientIdx ] = ( szCookieValue[ 0 ] != '\0' && StringToInt( szCookieValue ) );
 }
 
 void OnClientDisconnect_Blocks( int nClientIdx )
@@ -163,6 +187,8 @@ void OnClientDisconnect_Blocks( int nClientIdx )
 			}
 		}
 	}
+
+	g_bClientHasSeenBuildModeSuggestion[ nClientIdx ] = false;
 }
 
 public void Event_TeamplayRoundStart( Event hEvent, const char[] szName, bool bDontBroadcast )
@@ -238,12 +264,26 @@ public Action Cmd_MC_Build( int nClientIdx, int nNumArgs )
 {
 	Block_TryBuild( nClientIdx );
 
+	if ( !g_bClientHasSeenBuildModeSuggestion[ nClientIdx ] )
+	{
+		CPrintToChat( nClientIdx, "%t", "MC_UseBuildMode" );
+		SetClientCookie( nClientIdx, g_hCookie_SawBuildModeSuggestion, "1" );
+		g_bClientHasSeenBuildModeSuggestion[ nClientIdx ] = true;
+	}
+
 	return Plugin_Handled;
 }
 
 public Action Cmd_MC_Break( int nClientIdx, int nNumArgs )
 {
 	Block_TryBreak( nClientIdx );
+
+	if ( !g_bClientHasSeenBuildModeSuggestion[ nClientIdx ] )
+	{
+		CPrintToChat( nClientIdx, "%t", "MC_UseBuildMode" );
+		SetClientCookie( nClientIdx, g_hCookie_SawBuildModeSuggestion, "1" );
+		g_bClientHasSeenBuildModeSuggestion[ nClientIdx ] = true;
+	}
 
 	return Plugin_Handled;
 }
