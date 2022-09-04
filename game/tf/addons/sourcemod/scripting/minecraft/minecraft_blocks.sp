@@ -197,11 +197,7 @@ public void Event_TeamplayRoundStart( Event hEvent, const char[] szName, bool bD
 
 	if ( mc_dynamiclimit.BoolValue )
 	{
-		int nLowEdictThreshold = GetConVarInt( FindConVar( "sv_lowedict_threshold" ) );
-		int nNumMapEnts = GetEntityCount();
-		int nDynamicLimitBias = mc_dynamiclimit_bias.IntValue;
-
-		g_nBlockLimit = 2048 - nLowEdictThreshold - nNumMapEnts - nDynamicLimitBias;
+		g_nBlockLimit = Block_CalculateDynamicLimit();
 		if ( g_nBlockLimit < mc_dynamiclimit_threshold.IntValue )
 		{
 			g_bPluginDisabled = true;
